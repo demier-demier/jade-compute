@@ -1,0 +1,175 @@
+{
+  "device": {
+    "backend": "Metal",
+    "device_id": 0,
+    "device_type": "IntegratedGpu",
+    "driver": "",
+    "driver_info": "",
+    "max_compute_invocations_per_workgroup": 1024,
+    "max_storage_buffer_binding_size": 4294967295,
+    "name": "Apple M4 Pro",
+    "timestamps": true,
+    "vendor_id": 0
+  },
+  "host_arch": "aarch64",
+  "host_os": "macos",
+  "iterations_per_sample": 10,
+  "package_version": "0.1.0",
+  "plan_creation_host_ms": 1.4685,
+  "precision": "FP32",
+  "results": [
+    {
+      "gflops": 6.858480909165236,
+      "kernel": "naive",
+      "max_gpu_ms": null,
+      "median_gpu_ms": null,
+      "median_wall_ms": 0.305775,
+      "min_gpu_ms": null,
+      "samples": [
+        {
+          "gpu_ms_per_dispatch": null,
+          "wall_ms_per_dispatch": 0.307
+        },
+        {
+          "gpu_ms_per_dispatch": null,
+          "wall_ms_per_dispatch": 0.3040583
+        },
+        {
+          "gpu_ms_per_dispatch": null,
+          "wall_ms_per_dispatch": 0.3071083
+        },
+        {
+          "gpu_ms_per_dispatch": null,
+          "wall_ms_per_dispatch": 0.305775
+        },
+        {
+          "gpu_ms_per_dispatch": null,
+          "wall_ms_per_dispatch": 0.3035666
+        },
+        {
+          "gpu_ms_per_dispatch": null,
+          "wall_ms_per_dispatch": 0.2715125
+        },
+        {
+          "gpu_ms_per_dispatch": null,
+          "wall_ms_per_dispatch": 0.30761249999999996
+        }
+      ],
+      "validation": {
+        "all_elements_finite": true,
+        "checked_elements": 1024,
+        "max_abs_error": 0.00004261245094028254,
+        "max_scaled_error": 0.0006795576583232224,
+        "reference": "FP64 CPU dot products over original FP32 input",
+        "total_elements": 1024
+      }
+    },
+    {
+      "gflops": 6.850827429809425,
+      "kernel": "tiled16",
+      "max_gpu_ms": null,
+      "median_gpu_ms": null,
+      "median_wall_ms": 0.3061166,
+      "min_gpu_ms": null,
+      "samples": [
+        {
+          "gpu_ms_per_dispatch": null,
+          "wall_ms_per_dispatch": 0.30725420000000003
+        },
+        {
+          "gpu_ms_per_dispatch": null,
+          "wall_ms_per_dispatch": 0.30293749999999997
+        },
+        {
+          "gpu_ms_per_dispatch": null,
+          "wall_ms_per_dispatch": 0.3075583
+        },
+        {
+          "gpu_ms_per_dispatch": null,
+          "wall_ms_per_dispatch": 0.3061166
+        },
+        {
+          "gpu_ms_per_dispatch": null,
+          "wall_ms_per_dispatch": 0.3060791
+        },
+        {
+          "gpu_ms_per_dispatch": null,
+          "wall_ms_per_dispatch": 0.30627079999999995
+        },
+        {
+          "gpu_ms_per_dispatch": null,
+          "wall_ms_per_dispatch": 0.3009583
+        }
+      ],
+      "validation": {
+        "all_elements_finite": true,
+        "checked_elements": 1024,
+        "max_abs_error": 0.00004261245094028254,
+        "max_scaled_error": 0.0006795576583232224,
+        "reference": "FP64 CPU dot products over original FP32 input",
+        "total_elements": 1024
+      }
+    },
+    {
+      "gflops": 3.4473263048261042,
+      "kernel": "register32",
+      "max_gpu_ms": null,
+      "median_gpu_ms": null,
+      "median_wall_ms": 0.6083416,
+      "min_gpu_ms": null,
+      "samples": [
+        {
+          "gpu_ms_per_dispatch": null,
+          "wall_ms_per_dispatch": 0.6071875
+        },
+        {
+          "gpu_ms_per_dispatch": null,
+          "wall_ms_per_dispatch": 0.6052333
+        },
+        {
+          "gpu_ms_per_dispatch": null,
+          "wall_ms_per_dispatch": 0.7261624999999999
+        },
+        {
+          "gpu_ms_per_dispatch": null,
+          "wall_ms_per_dispatch": 0.6083416
+        },
+        {
+          "gpu_ms_per_dispatch": null,
+          "wall_ms_per_dispatch": 0.6944916
+        },
+        {
+          "gpu_ms_per_dispatch": null,
+          "wall_ms_per_dispatch": 0.6073000000000001
+        },
+        {
+          "gpu_ms_per_dispatch": null,
+          "wall_ms_per_dispatch": 0.6125499999999999
+        }
+      ],
+      "validation": {
+        "all_elements_finite": true,
+        "checked_elements": 1024,
+        "max_abs_error": 0.00004261245094028254,
+        "max_scaled_error": 0.0006795576583232224,
+        "reference": "FP64 CPU dot products over original FP32 input",
+        "total_elements": 1024
+      }
+    }
+  ],
+  "schema_version": 1,
+  "scope": "GEMM microbenchmark only; no complete model or CUDA comparison",
+  "selected_kernel": "naive",
+  "selection_metric": "median encode-submit-sync wall time / dispatch",
+  "shape": {
+    "k": 1024,
+    "m": 1,
+    "n": 1024
+  },
+  "speedup_vs_naive_same_device": 1.0,
+  "target_note": "No automatic certification. Establish exact model, driver and SDK separately from adapter identity.",
+  "target_tiangai300_validated": false,
+  "timing_scope": "Resident A/B/C, repeated same GEMM. Excludes allocation, compilation, initial upload and output download. Wall time includes encoding, submission, synchronization and timestamp resolve, but excludes timestamp mapping.",
+  "unix_time": 1793718340,
+  "warmup_dispatches": 4
+}

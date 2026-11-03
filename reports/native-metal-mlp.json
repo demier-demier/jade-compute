@@ -1,0 +1,166 @@
+{
+  "batched_samples": [
+    {
+      "dispatches": 60,
+      "gpu_ms": 4.0195833335019415,
+      "host_ms": 4.492042,
+      "repeats": 10
+    },
+    {
+      "dispatches": 60,
+      "gpu_ms": 4.614833333107526,
+      "host_ms": 4.846667,
+      "repeats": 10
+    },
+    {
+      "dispatches": 60,
+      "gpu_ms": 3.435999999055639,
+      "host_ms": 3.6603339999999998,
+      "repeats": 10
+    },
+    {
+      "dispatches": 60,
+      "gpu_ms": 1.7310833336523501,
+      "host_ms": 1.9082089999999998,
+      "repeats": 10
+    },
+    {
+      "dispatches": 60,
+      "gpu_ms": 1.74449999940407,
+      "host_ms": 1.940625,
+      "repeats": 10
+    },
+    {
+      "dispatches": 60,
+      "gpu_ms": 1.3506666673492873,
+      "host_ms": 1.543125,
+      "repeats": 10
+    },
+    {
+      "dispatches": 60,
+      "gpu_ms": 1.3294583332026377,
+      "host_ms": 1.57575,
+      "repeats": 10
+    }
+  ],
+  "final_check": {
+    "all_finite": true,
+    "elements": 1024,
+    "max_abs_error": 2.0079003826278807e-7,
+    "max_relative_error": 0.00006127829184708441
+  },
+  "host_arch": "aarch64",
+  "host_os": "macos",
+  "initial_check": {
+    "all_finite": true,
+    "elements": 1024,
+    "max_abs_error": 2.0079003826278807e-7,
+    "max_relative_error": 0.00006127829184708441
+  },
+  "median_batched_host_ms_per_block": 0.1940625,
+  "median_separate_host_ms_per_block": 1.1256333,
+  "output_elements": 1024,
+  "ratio_separate_to_batched": 5.800364830917875,
+  "runtime": {
+    "backend": "native-metal",
+    "device": "Apple M4 Pro",
+    "execution": "direct MTLBuffer/MTLComputePipelineState; ordered synchronous command buffers",
+    "limitations": [
+      "FP32 kernels generated from Jade IR; no tensor-core instructions",
+      "Shared storage and thread-confined synchronous API; no asynchronous stream interface",
+      "GPU timings cover the full command buffer, including dependencies between jobs",
+      "Metal validation does not establish Chinese-GPU support or performance"
+    ]
+  },
+  "schema_version": 1,
+  "scope": "Same native kernels and resident tensors; one ordered batch versus synchronizing every dispatch. Excludes compilation, allocation, upload and readback. Not a CUDA/vendor-BLAS/full-model comparison.",
+  "separate_submission_samples": [
+    {
+      "dispatches": 60,
+      "gpu_ms": 5.007000005207374,
+      "host_ms": 17.309417,
+      "repeats": 10
+    },
+    {
+      "dispatches": 60,
+      "gpu_ms": 4.959291662089527,
+      "host_ms": 14.543208,
+      "repeats": 10
+    },
+    {
+      "dispatches": 60,
+      "gpu_ms": 4.309708338041673,
+      "host_ms": 12.642000000000001,
+      "repeats": 10
+    },
+    {
+      "dispatches": 60,
+      "gpu_ms": 2.8048333297192585,
+      "host_ms": 11.256333,
+      "repeats": 10
+    },
+    {
+      "dispatches": 60,
+      "gpu_ms": 2.2949166668695398,
+      "host_ms": 10.371833,
+      "repeats": 10
+    },
+    {
+      "dispatches": 60,
+      "gpu_ms": 2.0057916717632907,
+      "host_ms": 10.694624999999998,
+      "repeats": 10
+    },
+    {
+      "dispatches": 60,
+      "gpu_ms": 1.6070416659204056,
+      "host_ms": 10.133209,
+      "repeats": 10
+    }
+  ],
+  "shape": {
+    "batch": 8,
+    "hidden": 256,
+    "width": 128
+  },
+  "specs": [
+    {
+      "cols": 128,
+      "epsilon": 9.999999747378752e-6,
+      "op": "rms_norm",
+      "rows": 8
+    },
+    {
+      "k": 128,
+      "m": 8,
+      "n": 256,
+      "op": "gemm",
+      "tiled": true
+    },
+    {
+      "k": 128,
+      "m": 8,
+      "n": 256,
+      "op": "gemm",
+      "tiled": true
+    },
+    {
+      "len": 2048,
+      "op": "swi_glu"
+    },
+    {
+      "k": 256,
+      "m": 8,
+      "n": 128,
+      "op": "gemm",
+      "tiled": true
+    },
+    {
+      "len": 1024,
+      "op": "add"
+    }
+  ],
+  "trained_model": false,
+  "unix_time": 1793719610,
+  "workload": "synthetic residual MLP: RMSNorm -> gate/up GEMM -> SwiGLU -> down GEMM -> residual add"
+}

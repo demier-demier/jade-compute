@@ -1,0 +1,5 @@
+{
+  "op": "softmax",
+  "rows": 3,
+  "cols": 17
+}

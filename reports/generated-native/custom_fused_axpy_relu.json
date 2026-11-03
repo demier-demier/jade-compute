@@ -1,0 +1,30 @@
+{
+  "op": "elementwise",
+  "len": 257,
+  "inputs": 2,
+  "expression": {
+    "kind": "maximum",
+    "left": {
+      "kind": "add",
+      "left": {
+        "kind": "multiply",
+        "left": {
+          "kind": "input",
+          "binding": 0
+        },
+        "right": {
+          "kind": "constant",
+          "value": 2.5
+        }
+      },
+      "right": {
+        "kind": "input",
+        "binding": 1
+      }
+    },
+    "right": {
+      "kind": "constant",
+      "value": 0.0
+    }
+  }
+}

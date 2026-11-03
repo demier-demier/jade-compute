@@ -1,0 +1,15 @@
+{
+  "op": "elementwise",
+  "len": 73,
+  "inputs": 1,
+  "expression": {
+    "kind": "exp",
+    "value": {
+      "kind": "negate",
+      "value": {
+        "kind": "input",
+        "binding": 0
+      }
+    }
+  }
+}

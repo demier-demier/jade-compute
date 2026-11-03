@@ -1,0 +1,6 @@
+{
+  "op": "rms_norm",
+  "rows": 3,
+  "cols": 17,
+  "epsilon": 0.00001
+}

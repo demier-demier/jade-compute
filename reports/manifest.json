@@ -1,0 +1,28 @@
+{
+  "host": "macOS-27.2-arm64-arm-64bit",
+  "rust": "cargo 1.90.0 (840b83a10 2025-07-30)",
+  "validation_date": "2026-11-03",
+  "corex_gpu_tested": false,
+  "model_inference_tested": false,
+  "nvidia_comparison_tested": false,
+  "source_sha256": {
+    "Cargo.lock": "a175c7e651cb78699c1001b182c7acc375ee3338454880a3e8bfca5d788eb159",
+    "Cargo.toml": "8a8db228608df98c6dba0fa7ff228625f8bb95a34c067471f12fa49bbbb75bb5",
+    "native/fp16.hpp": "9d8a29501669902ce64389337bcb3138a586dd99ff2903194269e0809fa4198b",
+    "native/fp16_test.cpp": "48645c496fcc248f7cda2d5c4681fba683aeee88f053d418c736cd8fc351b9be",
+    "native/jade_corex.cpp": "9d068add6633029d1e086e395e8e5fd49f746aa9499b304d25a3bbce29a8a9ff",
+    "native/jade_corex.h": "9a056a492e9a73b5c0e441f80fcc03755657e6a16229af918041f23f05d6bcb6",
+    "rust-toolchain.toml": "4dfbf882acd095e668320fb076d3866f0c810e50a76645dea50c8b77aab27597",
+    "scripts/build-corex.sh": "6ea9981247db0fbb407b6b18d70e99136fe1df20379e9794760d27ad2f24fbaa",
+    "scripts/cargo-local.sh": "38ce5480d8660a684c820a55724d6ade9dada2ecf092a38a1891c149039d4a50",
+    "src/corex.rs": "d998fa7b8e9fc4bb1759939cff7a8dfe14eddb5bbdbc2660e21f7b945e28379d",
+    "src/kernels/naive.wgsl": "2f0d4c7bd9cb6d4e0c087b4c4f91a5ba8a27017235f70ed78e41357633fb09ee",
+    "src/kernels/register32.wgsl": "54edc9933eb65ef1810b5b19a1ce5e904251d8db03bf473c78cfca9456f5ba22",
+    "src/kernels/tiled16.wgsl": "4194d77789ad6ea00de4e39d3f4f55207ed6ff673ad84a2fca1095642d6b4d9c",
+    "src/lib.rs": "30d648ffe0704a2c2c3fc9579e2754d4265c2ac354768e34a782c26a702b1255",
+    "src/main.rs": "0347154c7efefb806d06d4bf85be30b66ea0500c12d62a3b24305e9e0c783d49",
+    "src/portable.rs": "9c1b6e78ed575f29a8e953cd8732b7f3dea15215f98334437d5d4bb1dd752750",
+    "src/validation.rs": "174db54ebeb7398250c462933b12807518c1788659c5261a7fd04fdddf4ec496"
+  },
+  "binary_sha256": "9ef4a33479ecfcb31c6e8475488dba06a7398d7aa5dc7f574a849794e68bf180"
+}

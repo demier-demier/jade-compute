@@ -1,0 +1,7 @@
+/target/
+/.tooling/
+/native/build/
+*.dylib
+*.so
+.DS_Store
+

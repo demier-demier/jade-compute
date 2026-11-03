@@ -1,0 +1,362 @@
+{
+  "checks": [
+    {
+      "kernel": "naive",
+      "shape": {
+        "k": 1,
+        "m": 1,
+        "n": 1
+      },
+      "validation": {
+        "all_elements_finite": true,
+        "checked_elements": 1,
+        "max_abs_error": 1.473324573453283e-9,
+        "max_scaled_error": 0.00007338468517496889,
+        "reference": "FP64 CPU dot products over original FP32 input",
+        "total_elements": 1
+      }
+    },
+    {
+      "kernel": "tiled16",
+      "shape": {
+        "k": 1,
+        "m": 1,
+        "n": 1
+      },
+      "validation": {
+        "all_elements_finite": true,
+        "checked_elements": 1,
+        "max_abs_error": 1.473324573453283e-9,
+        "max_scaled_error": 0.00007338468517496889,
+        "reference": "FP64 CPU dot products over original FP32 input",
+        "total_elements": 1
+      }
+    },
+    {
+      "kernel": "register32",
+      "shape": {
+        "k": 1,
+        "m": 1,
+        "n": 1
+      },
+      "validation": {
+        "all_elements_finite": true,
+        "checked_elements": 1,
+        "max_abs_error": 1.473324573453283e-9,
+        "max_scaled_error": 0.00007338468517496889,
+        "reference": "FP64 CPU dot products over original FP32 input",
+        "total_elements": 1
+      }
+    },
+    {
+      "kernel": "naive",
+      "shape": {
+        "k": 33,
+        "m": 1,
+        "n": 17
+      },
+      "validation": {
+        "all_elements_finite": true,
+        "checked_elements": 17,
+        "max_abs_error": 6.012811866185075e-7,
+        "max_scaled_error": 0.006787891454143475,
+        "reference": "FP64 CPU dot products over original FP32 input",
+        "total_elements": 17
+      }
+    },
+    {
+      "kernel": "tiled16",
+      "shape": {
+        "k": 33,
+        "m": 1,
+        "n": 17
+      },
+      "validation": {
+        "all_elements_finite": true,
+        "checked_elements": 17,
+        "max_abs_error": 6.012811866185075e-7,
+        "max_scaled_error": 0.006787891454143475,
+        "reference": "FP64 CPU dot products over original FP32 input",
+        "total_elements": 17
+      }
+    },
+    {
+      "kernel": "register32",
+      "shape": {
+        "k": 33,
+        "m": 1,
+        "n": 17
+      },
+      "validation": {
+        "all_elements_finite": true,
+        "checked_elements": 17,
+        "max_abs_error": 6.012811866185075e-7,
+        "max_scaled_error": 0.006787891454143475,
+        "reference": "FP64 CPU dot products over original FP32 input",
+        "total_elements": 17
+      }
+    },
+    {
+      "kernel": "naive",
+      "shape": {
+        "k": 35,
+        "m": 17,
+        "n": 1
+      },
+      "validation": {
+        "all_elements_finite": true,
+        "checked_elements": 17,
+        "max_abs_error": 4.2168923641838774e-7,
+        "max_scaled_error": 0.004043036339247613,
+        "reference": "FP64 CPU dot products over original FP32 input",
+        "total_elements": 17
+      }
+    },
+    {
+      "kernel": "tiled16",
+      "shape": {
+        "k": 35,
+        "m": 17,
+        "n": 1
+      },
+      "validation": {
+        "all_elements_finite": true,
+        "checked_elements": 17,
+        "max_abs_error": 4.2168923641838774e-7,
+        "max_scaled_error": 0.004043036339247613,
+        "reference": "FP64 CPU dot products over original FP32 input",
+        "total_elements": 17
+      }
+    },
+    {
+      "kernel": "register32",
+      "shape": {
+        "k": 35,
+        "m": 17,
+        "n": 1
+      },
+      "validation": {
+        "all_elements_finite": true,
+        "checked_elements": 17,
+        "max_abs_error": 4.2168923641838774e-7,
+        "max_scaled_error": 0.004043036339247613,
+        "reference": "FP64 CPU dot products over original FP32 input",
+        "total_elements": 17
+      }
+    },
+    {
+      "kernel": "naive",
+      "shape": {
+        "k": 19,
+        "m": 31,
+        "n": 47
+      },
+      "validation": {
+        "all_elements_finite": true,
+        "checked_elements": 1457,
+        "max_abs_error": 1.0111979804605653e-6,
+        "max_scaled_error": 0.02270733503863514,
+        "reference": "FP64 CPU dot products over original FP32 input",
+        "total_elements": 1457
+      }
+    },
+    {
+      "kernel": "tiled16",
+      "shape": {
+        "k": 19,
+        "m": 31,
+        "n": 47
+      },
+      "validation": {
+        "all_elements_finite": true,
+        "checked_elements": 1457,
+        "max_abs_error": 1.0111979804605653e-6,
+        "max_scaled_error": 0.02270733503863514,
+        "reference": "FP64 CPU dot products over original FP32 input",
+        "total_elements": 1457
+      }
+    },
+    {
+      "kernel": "register32",
+      "shape": {
+        "k": 19,
+        "m": 31,
+        "n": 47
+      },
+      "validation": {
+        "all_elements_finite": true,
+        "checked_elements": 1457,
+        "max_abs_error": 1.0111979804605653e-6,
+        "max_scaled_error": 0.02270733503863514,
+        "reference": "FP64 CPU dot products over original FP32 input",
+        "total_elements": 1457
+      }
+    },
+    {
+      "kernel": "naive",
+      "shape": {
+        "k": 64,
+        "m": 64,
+        "n": 64
+      },
+      "validation": {
+        "all_elements_finite": true,
+        "checked_elements": 4096,
+        "max_abs_error": 2.2787685622915888e-6,
+        "max_scaled_error": 0.00890482642276619,
+        "reference": "FP64 CPU dot products over original FP32 input",
+        "total_elements": 4096
+      }
+    },
+    {
+      "kernel": "tiled16",
+      "shape": {
+        "k": 64,
+        "m": 64,
+        "n": 64
+      },
+      "validation": {
+        "all_elements_finite": true,
+        "checked_elements": 4096,
+        "max_abs_error": 2.2787685622915888e-6,
+        "max_scaled_error": 0.00890482642276619,
+        "reference": "FP64 CPU dot products over original FP32 input",
+        "total_elements": 4096
+      }
+    },
+    {
+      "kernel": "register32",
+      "shape": {
+        "k": 64,
+        "m": 64,
+        "n": 64
+      },
+      "validation": {
+        "all_elements_finite": true,
+        "checked_elements": 4096,
+        "max_abs_error": 2.2787685622915888e-6,
+        "max_scaled_error": 0.00890482642276619,
+        "reference": "FP64 CPU dot products over original FP32 input",
+        "total_elements": 4096
+      }
+    },
+    {
+      "kernel": "naive",
+      "shape": {
+        "k": 17,
+        "m": 65,
+        "n": 33
+      },
+      "validation": {
+        "all_elements_finite": true,
+        "checked_elements": 2145,
+        "max_abs_error": 8.135836964129339e-7,
+        "max_scaled_error": 0.017823459052422188,
+        "reference": "FP64 CPU dot products over original FP32 input",
+        "total_elements": 2145
+      }
+    },
+    {
+      "kernel": "tiled16",
+      "shape": {
+        "k": 17,
+        "m": 65,
+        "n": 33
+      },
+      "validation": {
+        "all_elements_finite": true,
+        "checked_elements": 2145,
+        "max_abs_error": 8.135836964129339e-7,
+        "max_scaled_error": 0.017823459052422188,
+        "reference": "FP64 CPU dot products over original FP32 input",
+        "total_elements": 2145
+      }
+    },
+    {
+      "kernel": "register32",
+      "shape": {
+        "k": 17,
+        "m": 65,
+        "n": 33
+      },
+      "validation": {
+        "all_elements_finite": true,
+        "checked_elements": 2145,
+        "max_abs_error": 8.135836964129339e-7,
+        "max_scaled_error": 0.017823459052422188,
+        "reference": "FP64 CPU dot products over original FP32 input",
+        "total_elements": 2145
+      }
+    },
+    {
+      "kernel": "naive",
+      "shape": {
+        "k": 257,
+        "m": 3,
+        "n": 5
+      },
+      "validation": {
+        "all_elements_finite": true,
+        "checked_elements": 15,
+        "max_abs_error": 2.8376158525134088e-6,
+        "max_scaled_error": 0.0007140810013465004,
+        "reference": "FP64 CPU dot products over original FP32 input",
+        "total_elements": 15
+      }
+    },
+    {
+      "kernel": "tiled16",
+      "shape": {
+        "k": 257,
+        "m": 3,
+        "n": 5
+      },
+      "validation": {
+        "all_elements_finite": true,
+        "checked_elements": 15,
+        "max_abs_error": 2.8376158525134088e-6,
+        "max_scaled_error": 0.0007140810013465004,
+        "reference": "FP64 CPU dot products over original FP32 input",
+        "total_elements": 15
+      }
+    },
+    {
+      "kernel": "register32",
+      "shape": {
+        "k": 257,
+        "m": 3,
+        "n": 5
+      },
+      "validation": {
+        "all_elements_finite": true,
+        "checked_elements": 15,
+        "max_abs_error": 2.8376158525134088e-6,
+        "max_scaled_error": 0.0007140810013465004,
+        "reference": "FP64 CPU dot products over original FP32 input",
+        "total_elements": 15
+      }
+    }
+  ],
+  "device": {
+    "backend": "Metal",
+    "device_id": 0,
+    "device_type": "IntegratedGpu",
+    "driver": "",
+    "driver_info": "",
+    "max_compute_invocations_per_workgroup": 1024,
+    "max_storage_buffer_binding_size": 4294967295,
+    "name": "Apple M4 Pro",
+    "timestamps": true,
+    "vendor_id": 0
+  },
+  "host_arch": "aarch64",
+  "host_os": "macos",
+  "package_version": "0.1.0",
+  "passed": true,
+  "precision": "FP32",
+  "schema_version": 1,
+  "scope": "GEMM microbenchmark only; no complete model or CUDA comparison",
+  "target_note": "No automatic certification. Establish exact model, driver and SDK separately from adapter identity.",
+  "target_tiangai300_validated": false,
+  "unix_time": 1793718256
+}

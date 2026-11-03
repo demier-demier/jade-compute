@@ -1,0 +1,450 @@
+{
+  "checks": [
+    {
+      "case": "axpy_1",
+      "check": {
+        "all_finite": true,
+        "elements": 1,
+        "max_abs_error": 2.9802322387695312e-8,
+        "max_relative_error": 3.8762512975266686e-8
+      },
+      "execution": {
+        "dispatches": 2,
+        "gpu_ms": 0.012124999557272531,
+        "host_ms": 2.3575839999999997,
+        "repeats": 2
+      },
+      "spec": {
+        "alpha": -0.375,
+        "len": 1,
+        "op": "axpy"
+      }
+    },
+    {
+      "case": "axpy_257",
+      "check": {
+        "all_finite": true,
+        "elements": 257,
+        "max_abs_error": 5.960464477539063e-8,
+        "max_relative_error": 5.944723935640279e-8
+      },
+      "execution": {
+        "dispatches": 2,
+        "gpu_ms": 0.012500000593718141,
+        "host_ms": 0.424958,
+        "repeats": 2
+      },
+      "spec": {
+        "alpha": -0.375,
+        "len": 257,
+        "op": "axpy"
+      }
+    },
+    {
+      "case": "axpy_1025",
+      "check": {
+        "all_finite": true,
+        "elements": 1025,
+        "max_abs_error": 5.960464477539063e-8,
+        "max_relative_error": 5.944723935640279e-8
+      },
+      "execution": {
+        "dispatches": 2,
+        "gpu_ms": 0.012250000509084202,
+        "host_ms": 0.33141699999999996,
+        "repeats": 2
+      },
+      "spec": {
+        "alpha": -0.375,
+        "len": 1025,
+        "op": "axpy"
+      }
+    },
+    {
+      "case": "add_257",
+      "check": {
+        "all_finite": true,
+        "elements": 257,
+        "max_abs_error": 1.1920928955078125e-7,
+        "max_relative_error": 5.6849335900270344e-8
+      },
+      "execution": {
+        "dispatches": 2,
+        "gpu_ms": 0.020625000615837052,
+        "host_ms": 0.349708,
+        "repeats": 2
+      },
+      "spec": {
+        "len": 257,
+        "op": "add"
+      }
+    },
+    {
+      "case": "swiglu_extreme",
+      "check": {
+        "all_finite": true,
+        "elements": 10,
+        "max_abs_error": 0.0000286102294921875,
+        "max_relative_error": 9.363791410810212e-8
+      },
+      "execution": {
+        "dispatches": 2,
+        "gpu_ms": 0.02191666681028437,
+        "host_ms": 0.349792,
+        "repeats": 2
+      },
+      "spec": {
+        "len": 10,
+        "op": "swi_glu"
+      }
+    },
+    {
+      "case": "rmsnorm_1_1",
+      "check": {
+        "all_finite": true,
+        "elements": 1,
+        "max_abs_error": 6.614863989895525e-9,
+        "max_relative_error": 1.4511264291710868e-8
+      },
+      "execution": {
+        "dispatches": 2,
+        "gpu_ms": 0.027041665816796012,
+        "host_ms": 0.356417,
+        "repeats": 2
+      },
+      "spec": {
+        "cols": 1,
+        "epsilon": 9.999999747378752e-6,
+        "op": "rms_norm",
+        "rows": 1
+      }
+    },
+    {
+      "case": "softmax_1_1",
+      "check": {
+        "all_finite": true,
+        "elements": 1,
+        "max_abs_error": 0.0,
+        "max_relative_error": 0.0
+      },
+      "execution": {
+        "dispatches": 2,
+        "gpu_ms": 0.03608333281590603,
+        "host_ms": 0.37375,
+        "repeats": 2
+      },
+      "spec": {
+        "cols": 1,
+        "op": "softmax",
+        "rows": 1
+      }
+    },
+    {
+      "case": "rmsnorm_3_17",
+      "check": {
+        "all_finite": true,
+        "elements": 51,
+        "max_abs_error": 1.1601638583158547e-7,
+        "max_relative_error": 1.2862290599225225e-7
+      },
+      "execution": {
+        "dispatches": 2,
+        "gpu_ms": 0.02012499862757977,
+        "host_ms": 0.399667,
+        "repeats": 2
+      },
+      "spec": {
+        "cols": 17,
+        "epsilon": 9.999999747378752e-6,
+        "op": "rms_norm",
+        "rows": 3
+      }
+    },
+    {
+      "case": "softmax_3_17",
+      "check": {
+        "all_finite": true,
+        "elements": 51,
+        "max_abs_error": 1.0935039096438004e-8,
+        "max_relative_error": 8.034234628224804e-8
+      },
+      "execution": {
+        "dispatches": 2,
+        "gpu_ms": 0.02808333192660939,
+        "host_ms": 0.34125,
+        "repeats": 2
+      },
+      "spec": {
+        "cols": 17,
+        "op": "softmax",
+        "rows": 3
+      }
+    },
+    {
+      "case": "rmsnorm_2_257",
+      "check": {
+        "all_finite": true,
+        "elements": 514,
+        "max_abs_error": 1.2746385169570829e-7,
+        "max_relative_error": 1.4081509699513498e-7
+      },
+      "execution": {
+        "dispatches": 2,
+        "gpu_ms": 0.023208333004731685,
+        "host_ms": 0.35525,
+        "repeats": 2
+      },
+      "spec": {
+        "cols": 257,
+        "epsilon": 9.999999747378752e-6,
+        "op": "rms_norm",
+        "rows": 2
+      }
+    },
+    {
+      "case": "softmax_2_257",
+      "check": {
+        "all_finite": true,
+        "elements": 514,
+        "max_abs_error": 1.9069716583608454e-8,
+        "max_relative_error": 1.2429656600506913e-7
+      },
+      "execution": {
+        "dispatches": 2,
+        "gpu_ms": 0.03925000055460259,
+        "host_ms": 0.371708,
+        "repeats": 2
+      },
+      "spec": {
+        "cols": 257,
+        "op": "softmax",
+        "rows": 2
+      }
+    },
+    {
+      "case": "gemm_1_1_1_tiled_false",
+      "check": {
+        "all_finite": true,
+        "elements": 1,
+        "max_abs_error": 2.91491630832752e-9,
+        "max_relative_error": 1.532244408309004e-8
+      },
+      "execution": {
+        "dispatches": 2,
+        "gpu_ms": 0.011750000339816324,
+        "host_ms": 0.339666,
+        "repeats": 2
+      },
+      "spec": {
+        "k": 1,
+        "m": 1,
+        "n": 1,
+        "op": "gemm",
+        "tiled": false
+      }
+    },
+    {
+      "case": "gemm_1_1_1_tiled_true",
+      "check": {
+        "all_finite": true,
+        "elements": 1,
+        "max_abs_error": 2.91491630832752e-9,
+        "max_relative_error": 1.532244408309004e-8
+      },
+      "execution": {
+        "dispatches": 2,
+        "gpu_ms": 0.023624999812454917,
+        "host_ms": 0.374083,
+        "repeats": 2
+      },
+      "spec": {
+        "k": 1,
+        "m": 1,
+        "n": 1,
+        "op": "gemm",
+        "tiled": true
+      }
+    },
+    {
+      "case": "gemm_31_47_19_tiled_false",
+      "check": {
+        "all_finite": true,
+        "elements": 1457,
+        "max_abs_error": 6.20527174532981e-7,
+        "max_relative_error": 0.00010559508423900944
+      },
+      "execution": {
+        "dispatches": 2,
+        "gpu_ms": 0.04587500006891787,
+        "host_ms": 0.38941699999999996,
+        "repeats": 2
+      },
+      "spec": {
+        "k": 19,
+        "m": 31,
+        "n": 47,
+        "op": "gemm",
+        "tiled": false
+      }
+    },
+    {
+      "case": "gemm_31_47_19_tiled_true",
+      "check": {
+        "all_finite": true,
+        "elements": 1457,
+        "max_abs_error": 6.20527174532981e-7,
+        "max_relative_error": 0.00010559508423900944
+      },
+      "execution": {
+        "dispatches": 2,
+        "gpu_ms": 0.08062499910010956,
+        "host_ms": 0.415,
+        "repeats": 2
+      },
+      "spec": {
+        "k": 19,
+        "m": 31,
+        "n": 47,
+        "op": "gemm",
+        "tiled": true
+      }
+    },
+    {
+      "case": "gemm_8_33_65_tiled_false",
+      "check": {
+        "all_finite": true,
+        "elements": 264,
+        "max_abs_error": 1.4214186734307077e-6,
+        "max_relative_error": 0.00011683197698486372
+      },
+      "execution": {
+        "dispatches": 2,
+        "gpu_ms": 0.042208333979942836,
+        "host_ms": 0.386417,
+        "repeats": 2
+      },
+      "spec": {
+        "k": 65,
+        "m": 8,
+        "n": 33,
+        "op": "gemm",
+        "tiled": false
+      }
+    },
+    {
+      "case": "gemm_8_33_65_tiled_true",
+      "check": {
+        "all_finite": true,
+        "elements": 264,
+        "max_abs_error": 1.4214186734307077e-6,
+        "max_relative_error": 0.00011683197698486372
+      },
+      "execution": {
+        "dispatches": 2,
+        "gpu_ms": 0.13879166544938926,
+        "host_ms": 0.261708,
+        "repeats": 2
+      },
+      "spec": {
+        "k": 65,
+        "m": 8,
+        "n": 33,
+        "op": "gemm",
+        "tiled": true
+      }
+    },
+    {
+      "case": "custom_fused_axpy_relu",
+      "check": {
+        "all_finite": true,
+        "elements": 257,
+        "max_abs_error": 1.1920928955078125e-7,
+        "max_relative_error": 5.9254726053254234e-8
+      },
+      "execution": {
+        "dispatches": 2,
+        "gpu_ms": 0.01237499964190647,
+        "host_ms": 0.31604099999999996,
+        "repeats": 2
+      },
+      "spec": {
+        "expression": {
+          "kind": "maximum",
+          "left": {
+            "kind": "add",
+            "left": {
+              "kind": "multiply",
+              "left": {
+                "binding": 0,
+                "kind": "input"
+              },
+              "right": {
+                "kind": "constant",
+                "value": 2.5
+              }
+            },
+            "right": {
+              "binding": 1,
+              "kind": "input"
+            }
+          },
+          "right": {
+            "kind": "constant",
+            "value": 0.0
+          }
+        },
+        "inputs": 2,
+        "len": 257,
+        "op": "elementwise"
+      }
+    },
+    {
+      "case": "custom_negate_exp",
+      "check": {
+        "all_finite": true,
+        "elements": 73,
+        "max_abs_error": 2.0128480882064537e-7,
+        "max_relative_error": 9.185078057907406e-8
+      },
+      "execution": {
+        "dispatches": 2,
+        "gpu_ms": 0.013416667570709251,
+        "host_ms": 0.631458,
+        "repeats": 2
+      },
+      "spec": {
+        "expression": {
+          "kind": "exp",
+          "value": {
+            "kind": "negate",
+            "value": {
+              "binding": 0,
+              "kind": "input"
+            }
+          }
+        },
+        "inputs": 1,
+        "len": 73,
+        "op": "elementwise"
+      }
+    }
+  ],
+  "host_arch": "aarch64",
+  "host_os": "macos",
+  "passed": true,
+  "rejected_invalid_calls": 5,
+  "runtime": {
+    "backend": "native-metal",
+    "device": "Apple M4 Pro",
+    "execution": "direct MTLBuffer/MTLComputePipelineState; ordered synchronous command buffers",
+    "limitations": [
+      "FP32 kernels generated from Jade IR; no tensor-core instructions",
+      "Shared storage and thread-confined synchronous API; no asynchronous stream interface",
+      "GPU timings cover the full command buffer, including dependencies between jobs",
+      "Metal validation does not establish Chinese-GPU support or performance"
+    ]
+  },
+  "schema_version": 1,
+  "scope": "Native GPU execution against independent FP64 references; not CUDA ABI or full-model conformance",
+  "unix_time": 1793719610
+}

@@ -1,0 +1,737 @@
+{
+  "cases": [
+    {
+      "bindings": [
+        {
+          "elements": 1,
+          "name": "a",
+          "write": false
+        },
+        {
+          "elements": 1,
+          "name": "b",
+          "write": false
+        },
+        {
+          "elements": 1,
+          "name": "out",
+          "write": true
+        }
+      ],
+      "case": "axpy_1",
+      "launch": {
+        "block": [
+          256,
+          1,
+          1
+        ],
+        "grid": [
+          1,
+          1,
+          1
+        ]
+      },
+      "spec": {
+        "alpha": -0.375,
+        "len": 1,
+        "op": "axpy"
+      }
+    },
+    {
+      "bindings": [
+        {
+          "elements": 257,
+          "name": "a",
+          "write": false
+        },
+        {
+          "elements": 257,
+          "name": "b",
+          "write": false
+        },
+        {
+          "elements": 257,
+          "name": "out",
+          "write": true
+        }
+      ],
+      "case": "axpy_257",
+      "launch": {
+        "block": [
+          256,
+          1,
+          1
+        ],
+        "grid": [
+          2,
+          1,
+          1
+        ]
+      },
+      "spec": {
+        "alpha": -0.375,
+        "len": 257,
+        "op": "axpy"
+      }
+    },
+    {
+      "bindings": [
+        {
+          "elements": 1025,
+          "name": "a",
+          "write": false
+        },
+        {
+          "elements": 1025,
+          "name": "b",
+          "write": false
+        },
+        {
+          "elements": 1025,
+          "name": "out",
+          "write": true
+        }
+      ],
+      "case": "axpy_1025",
+      "launch": {
+        "block": [
+          256,
+          1,
+          1
+        ],
+        "grid": [
+          5,
+          1,
+          1
+        ]
+      },
+      "spec": {
+        "alpha": -0.375,
+        "len": 1025,
+        "op": "axpy"
+      }
+    },
+    {
+      "bindings": [
+        {
+          "elements": 257,
+          "name": "a",
+          "write": false
+        },
+        {
+          "elements": 257,
+          "name": "b",
+          "write": false
+        },
+        {
+          "elements": 257,
+          "name": "out",
+          "write": true
+        }
+      ],
+      "case": "add_257",
+      "launch": {
+        "block": [
+          256,
+          1,
+          1
+        ],
+        "grid": [
+          2,
+          1,
+          1
+        ]
+      },
+      "spec": {
+        "len": 257,
+        "op": "add"
+      }
+    },
+    {
+      "bindings": [
+        {
+          "elements": 10,
+          "name": "gate",
+          "write": false
+        },
+        {
+          "elements": 10,
+          "name": "up",
+          "write": false
+        },
+        {
+          "elements": 10,
+          "name": "out",
+          "write": true
+        }
+      ],
+      "case": "swiglu_extreme",
+      "launch": {
+        "block": [
+          256,
+          1,
+          1
+        ],
+        "grid": [
+          1,
+          1,
+          1
+        ]
+      },
+      "spec": {
+        "len": 10,
+        "op": "swi_glu"
+      }
+    },
+    {
+      "bindings": [
+        {
+          "elements": 1,
+          "name": "x",
+          "write": false
+        },
+        {
+          "elements": 1,
+          "name": "weight",
+          "write": false
+        },
+        {
+          "elements": 1,
+          "name": "out",
+          "write": true
+        }
+      ],
+      "case": "rmsnorm_1_1",
+      "launch": {
+        "block": [
+          256,
+          1,
+          1
+        ],
+        "grid": [
+          1,
+          1,
+          1
+        ]
+      },
+      "spec": {
+        "cols": 1,
+        "epsilon": 9.999999747378752e-6,
+        "op": "rms_norm",
+        "rows": 1
+      }
+    },
+    {
+      "bindings": [
+        {
+          "elements": 1,
+          "name": "x",
+          "write": false
+        },
+        {
+          "elements": 1,
+          "name": "out",
+          "write": true
+        }
+      ],
+      "case": "softmax_1_1",
+      "launch": {
+        "block": [
+          256,
+          1,
+          1
+        ],
+        "grid": [
+          1,
+          1,
+          1
+        ]
+      },
+      "spec": {
+        "cols": 1,
+        "op": "softmax",
+        "rows": 1
+      }
+    },
+    {
+      "bindings": [
+        {
+          "elements": 51,
+          "name": "x",
+          "write": false
+        },
+        {
+          "elements": 17,
+          "name": "weight",
+          "write": false
+        },
+        {
+          "elements": 51,
+          "name": "out",
+          "write": true
+        }
+      ],
+      "case": "rmsnorm_3_17",
+      "launch": {
+        "block": [
+          256,
+          1,
+          1
+        ],
+        "grid": [
+          3,
+          1,
+          1
+        ]
+      },
+      "spec": {
+        "cols": 17,
+        "epsilon": 9.999999747378752e-6,
+        "op": "rms_norm",
+        "rows": 3
+      }
+    },
+    {
+      "bindings": [
+        {
+          "elements": 51,
+          "name": "x",
+          "write": false
+        },
+        {
+          "elements": 51,
+          "name": "out",
+          "write": true
+        }
+      ],
+      "case": "softmax_3_17",
+      "launch": {
+        "block": [
+          256,
+          1,
+          1
+        ],
+        "grid": [
+          3,
+          1,
+          1
+        ]
+      },
+      "spec": {
+        "cols": 17,
+        "op": "softmax",
+        "rows": 3
+      }
+    },
+    {
+      "bindings": [
+        {
+          "elements": 514,
+          "name": "x",
+          "write": false
+        },
+        {
+          "elements": 257,
+          "name": "weight",
+          "write": false
+        },
+        {
+          "elements": 514,
+          "name": "out",
+          "write": true
+        }
+      ],
+      "case": "rmsnorm_2_257",
+      "launch": {
+        "block": [
+          256,
+          1,
+          1
+        ],
+        "grid": [
+          2,
+          1,
+          1
+        ]
+      },
+      "spec": {
+        "cols": 257,
+        "epsilon": 9.999999747378752e-6,
+        "op": "rms_norm",
+        "rows": 2
+      }
+    },
+    {
+      "bindings": [
+        {
+          "elements": 514,
+          "name": "x",
+          "write": false
+        },
+        {
+          "elements": 514,
+          "name": "out",
+          "write": true
+        }
+      ],
+      "case": "softmax_2_257",
+      "launch": {
+        "block": [
+          256,
+          1,
+          1
+        ],
+        "grid": [
+          2,
+          1,
+          1
+        ]
+      },
+      "spec": {
+        "cols": 257,
+        "op": "softmax",
+        "rows": 2
+      }
+    },
+    {
+      "bindings": [
+        {
+          "elements": 1,
+          "name": "a",
+          "write": false
+        },
+        {
+          "elements": 1,
+          "name": "b",
+          "write": false
+        },
+        {
+          "elements": 1,
+          "name": "out",
+          "write": true
+        }
+      ],
+      "case": "gemm_1_1_1_tiled_false",
+      "launch": {
+        "block": [
+          8,
+          8,
+          1
+        ],
+        "grid": [
+          1,
+          1,
+          1
+        ]
+      },
+      "spec": {
+        "k": 1,
+        "m": 1,
+        "n": 1,
+        "op": "gemm",
+        "tiled": false
+      }
+    },
+    {
+      "bindings": [
+        {
+          "elements": 1,
+          "name": "a",
+          "write": false
+        },
+        {
+          "elements": 1,
+          "name": "b",
+          "write": false
+        },
+        {
+          "elements": 1,
+          "name": "out",
+          "write": true
+        }
+      ],
+      "case": "gemm_1_1_1_tiled_true",
+      "launch": {
+        "block": [
+          8,
+          8,
+          1
+        ],
+        "grid": [
+          1,
+          1,
+          1
+        ]
+      },
+      "spec": {
+        "k": 1,
+        "m": 1,
+        "n": 1,
+        "op": "gemm",
+        "tiled": true
+      }
+    },
+    {
+      "bindings": [
+        {
+          "elements": 589,
+          "name": "a",
+          "write": false
+        },
+        {
+          "elements": 893,
+          "name": "b",
+          "write": false
+        },
+        {
+          "elements": 1457,
+          "name": "out",
+          "write": true
+        }
+      ],
+      "case": "gemm_31_47_19_tiled_false",
+      "launch": {
+        "block": [
+          8,
+          8,
+          1
+        ],
+        "grid": [
+          6,
+          4,
+          1
+        ]
+      },
+      "spec": {
+        "k": 19,
+        "m": 31,
+        "n": 47,
+        "op": "gemm",
+        "tiled": false
+      }
+    },
+    {
+      "bindings": [
+        {
+          "elements": 589,
+          "name": "a",
+          "write": false
+        },
+        {
+          "elements": 893,
+          "name": "b",
+          "write": false
+        },
+        {
+          "elements": 1457,
+          "name": "out",
+          "write": true
+        }
+      ],
+      "case": "gemm_31_47_19_tiled_true",
+      "launch": {
+        "block": [
+          8,
+          8,
+          1
+        ],
+        "grid": [
+          2,
+          1,
+          1
+        ]
+      },
+      "spec": {
+        "k": 19,
+        "m": 31,
+        "n": 47,
+        "op": "gemm",
+        "tiled": true
+      }
+    },
+    {
+      "bindings": [
+        {
+          "elements": 520,
+          "name": "a",
+          "write": false
+        },
+        {
+          "elements": 2145,
+          "name": "b",
+          "write": false
+        },
+        {
+          "elements": 264,
+          "name": "out",
+          "write": true
+        }
+      ],
+      "case": "gemm_8_33_65_tiled_false",
+      "launch": {
+        "block": [
+          8,
+          8,
+          1
+        ],
+        "grid": [
+          5,
+          1,
+          1
+        ]
+      },
+      "spec": {
+        "k": 65,
+        "m": 8,
+        "n": 33,
+        "op": "gemm",
+        "tiled": false
+      }
+    },
+    {
+      "bindings": [
+        {
+          "elements": 520,
+          "name": "a",
+          "write": false
+        },
+        {
+          "elements": 2145,
+          "name": "b",
+          "write": false
+        },
+        {
+          "elements": 264,
+          "name": "out",
+          "write": true
+        }
+      ],
+      "case": "gemm_8_33_65_tiled_true",
+      "launch": {
+        "block": [
+          8,
+          8,
+          1
+        ],
+        "grid": [
+          2,
+          1,
+          1
+        ]
+      },
+      "spec": {
+        "k": 65,
+        "m": 8,
+        "n": 33,
+        "op": "gemm",
+        "tiled": true
+      }
+    },
+    {
+      "bindings": [
+        {
+          "elements": 257,
+          "name": "input0",
+          "write": false
+        },
+        {
+          "elements": 257,
+          "name": "input1",
+          "write": false
+        },
+        {
+          "elements": 257,
+          "name": "out",
+          "write": true
+        }
+      ],
+      "case": "custom_fused_axpy_relu",
+      "launch": {
+        "block": [
+          256,
+          1,
+          1
+        ],
+        "grid": [
+          2,
+          1,
+          1
+        ]
+      },
+      "spec": {
+        "expression": {
+          "kind": "maximum",
+          "left": {
+            "kind": "add",
+            "left": {
+              "kind": "multiply",
+              "left": {
+                "binding": 0,
+                "kind": "input"
+              },
+              "right": {
+                "kind": "constant",
+                "value": 2.5
+              }
+            },
+            "right": {
+              "binding": 1,
+              "kind": "input"
+            }
+          },
+          "right": {
+            "kind": "constant",
+            "value": 0.0
+          }
+        },
+        "inputs": 2,
+        "len": 257,
+        "op": "elementwise"
+      }
+    },
+    {
+      "bindings": [
+        {
+          "elements": 73,
+          "name": "input0",
+          "write": false
+        },
+        {
+          "elements": 73,
+          "name": "out",
+          "write": true
+        }
+      ],
+      "case": "custom_negate_exp",
+      "launch": {
+        "block": [
+          256,
+          1,
+          1
+        ],
+        "grid": [
+          1,
+          1,
+          1
+        ]
+      },
+      "spec": {
+        "expression": {
+          "kind": "exp",
+          "value": {
+            "kind": "negate",
+            "value": {
+              "binding": 0,
+              "kind": "input"
+            }
+          }
+        },
+        "inputs": 1,
+        "len": 73,
+        "op": "elementwise"
+      }
+    }
+  ],
+  "schema_version": 1,
+  "scope": "Generated source, not compilation or hardware validation"
+}
