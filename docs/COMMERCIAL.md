@@ -13,13 +13,15 @@ commitments have **not** been announced.
 | Area | Current evidence |
 | --- | --- |
 | Compiler | Rust expression frontend and checked FP32 operation IR generate MSL and CoreX C++. |
-| Runtime | Owned GPU buffers, validation, compilation, pipeline reuse and ordered execution. |
-| Apple Metal | Direct execution on an Apple M4 Pro; 19 numerical cases and a synthetic residual MLP validated. |
+| Runtime | Owned GPU buffers, validation, compilation, pipeline reuse and ordered execution, including mixed MPS GEMM/shader batches. |
+| Apple Metal | Alpha 1 validated 19 numerical cases and a synthetic residual MLP on an Apple M4 Pro. The expansion implements FP32 SIMD-group GEMM, native MPS and small forward self-attention; its evidence is recorded separately. |
 | Iluvatar CoreX | Adapter and generated source prepared; no SDK build or device execution verified. |
 | Performance | Local measurements with raw samples and stated baselines; no demonstrated advantage over NVIDIA or a tuned vendor inference stack. |
 
 Read the [native runtime guide](NATIVE_RUNTIME.md),
-[recorded validation](../reports/NATIVE_RESULTS.md) and
+[alpha 1 validation history](../reports/NATIVE_RESULTS.md),
+[Metal expansion](METAL_ADVANCES.md), its
+[validation and measurements](../reports/METAL_ADVANCES.md), and
 [architecture coverage map](CUDA_RECONSTRUCTION.md).
 
 ## Intended product scope
@@ -33,8 +35,10 @@ improvements on specific hardware. Candidate capabilities include:
 - Qualification against named board, driver, SDK and compiler versions.
 - Ongoing support for an explicitly agreed hardware/software matrix.
 
-These are development goals. Full CUDA compatibility, arbitrary model support,
-training at scale and deployment support are outside today's validated scope.
+These are development goals. The implemented forward-attention subset has no
+KV cache, dropout or backward pass. Full CUDA compatibility, TensorRT/cuDNN
+replacement, arbitrary model support, training at scale and deployment support
+are outside today's validated scope.
 
 ## A possible evaluation project
 

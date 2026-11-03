@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "source_commit": "ad349266616cc6cbcb51a2a4b46376a438944c4c",
+  "source_files": {
+    "Cargo.lock": "012f678322f6f6d5c55b5c05eb191b1e38a3dfe853ab0499918e0d7b48f92e66",
+    "Cargo.toml": "18827815a227e58fee0e93c757d080c31945d2ca8c5b5bc775fce271859e8078",
+    "examples/kernels/attention_online.json": "27f61e235dbec592b8b3543c761327158acd72251784eb57ac2a6b38f9b8f728",
+    "examples/kernels/fused_axpy_relu.json": "36bba04c9e5a1893e7016585b8b59f9aa64338bf4283575adc5482288dbf8a73",
+    "examples/kernels/gemm_mps.json": "863619605c4d03336b7927fbc3afca4eb09dce3f7e0a8776e93703231ae20ea6",
+    "examples/kernels/gemm_simd.json": "3df37fdaa6b0ceabcf11400b3d61110c9858a1ed3e9135b8a43a1d55f2b498ff",
+    "rust-toolchain.toml": "4dfbf882acd095e668320fb076d3866f0c810e50a76645dea50c8b77aab27597",
+    "scripts/build-corex-runtime.sh": "5c617074b75768a55bc9637f6c346b292017a7f7ab6a53165cc4c4684f86e55f",
+    "scripts/build-corex.sh": "6ea9981247db0fbb407b6b18d70e99136fe1df20379e9794760d27ad2f24fbaa",
+    "scripts/cargo-local.sh": "38ce5480d8660a684c820a55724d6ade9dada2ecf092a38a1891c149039d4a50",
+    "scripts/verify-metal-advances.sh": "ce2cb2a1ba08505901024790a12d117ebe45103182cdbe7aef0630380c377cf4",
+    "scripts/verify-native-metal.sh": "00c8e2b87ab4eb0e682ab22ec354d615e6be9c1706727258fdc181df834b7165",
+    "src/bin/jade-runtime.rs": "44995dc970cb141eb1705f082e3cf107f02ce9e98082996871e1ebe331030187",
+    "src/corex.rs": "d998fa7b8e9fc4bb1759939cff7a8dfe14eddb5bbdbc2660e21f7b945e28379d",
+    "src/lib.rs": "b753e2174e797b5c3b89785591540f90550686f760e1a9da8f92beb45eb66274",
+    "src/main.rs": "0347154c7efefb806d06d4bf85be30b66ea0500c12d62a3b24305e9e0c783d49",
+    "src/portable.rs": "9c1b6e78ed575f29a8e953cd8732b7f3dea15215f98334437d5d4bb1dd752750",
+    "src/runtime/corex.rs": "b5f0874d0e2ac52bf17514d8c29da25abe8a2935fb15b4e3ad6bb746b00efc48",
+    "src/runtime/ir.rs": "36e61a201274095d6c5331fff66ac943ba4ef75565bb027b006446c26532e75c",
+    "src/runtime/metal.rs": "093b5b6c3482477f97d05af1e91fcb2d2b76be5a0f371f186da4e372f712a4e6",
+    "src/runtime/metal_attention.rs": "fe8a32af6d488f39c4d02b696998998672c6e0e9f44778aaf288024d6f88debe",
+    "src/runtime/metal_lab.rs": "9de0e7cf83337786f8de609101b314c4357623c2022d3982f5344fe96aba9b0f",
+    "src/runtime/metal_simd.rs": "3170a4faa4e35ef4fb17428cfe4398f6e79705ea97ec37f1fba9196e61f5f12e",
+    "src/runtime/mod.rs": "078f67359e564536dc761b8ff9f73d332d9f5ec566cd386ba50cc88df6097299",
+    "src/runtime/workloads.rs": "0e544da0db9adea35f32bbda4cd2f78a87bf3f6b4c968f91f79cd59ebc8ae96d",
+    "src/validation.rs": "174db54ebeb7398250c462933b12807518c1788659c5261a7fd04fdddf4ec496"
+  },
+  "binary": {
+    "path": "target/release/jade-runtime",
+    "sha256": "b2380ed9bd24728d833daa88adccd8bc657ce49449395b30de25cd809fca760a"
+  },
+  "reports": {
+    "attention-256.json": "5b4ddda0c80fc281b48e5540874c6fa09a1bb25f5086827cd3f11cd8fd063e30",
+    "attention-512.json": "f3a27d721026465727af3d23333141a68f1915cb4e533d8602d56a477059be51",
+    "attention-causal-512.json": "ddd25c0c47c80635fe429604fce1c19d48492bc4765b8413ab5752fd3f2e4a74",
+    "gemm-1024.json": "0d4f4b740dcb338f448b1c6e0a738a4d0ff931ea53ddce767744dbcb2d653abc",
+    "gemm-128.json": "69856a6d0e61f96d1fda46700f7aacbcce057f16f22a600880e2a80c5f6efa75",
+    "gemm-512.json": "bdd67524874d49dd6c040f2b7d4ed7cc307dc1e51118088a093142cfc0971144",
+    "gemm-ragged.json": "b6b5305af829459c77d137557176043a5b61df1d50006ac9eddb8ac34356c0bd",
+    "gemm-vector.json": "9595bc07752fe7a7ffa52f40c86963221341a0e476c4b77d0ff5ba5f612bdaba",
+    "mlp-mps.json": "703f70d63d221425407c23c8c2c57df85439471ee8c61c97f5d9ece03b623020",
+    "mlp-simd.json": "f6fa3e75e2fd77e76137cdade4ba18f7b290b9ff742cdb6b7a782881d4191caa",
+    "native-verify.json": "1e2f72e01589a0602d343acb53dcb700a7164e66c86a10fd109eeac4886da2d6",
+    "verify.json": "5e612cf7a4b14607fb2220c243368d1ec5055d210f3c56c2cc896b185a52d787"
+  },
+  "generated_sources": {
+    "attention_online.metal": "e44ea0c0e673ef52092bb5ce58216bc962a9bcaa21a63059cb148e571e422170",
+    "gemm_simd.metal": "6a8fcef259bd23e33b935c5f90a80a733f0462fee1b35730a1db87b6ea24479a"
+  },
+  "os": "27.2",
+  "architecture": "arm64",
+  "cargo": "cargo 1.90.0 (840b83a10 2025-07-30)",
+  "correctness_validation": "Metal API and shader validation enabled for host GPU tests, native-verify and metal-verify.",
+  "benchmark_instrumentation": "MTL_DEBUG_LAYER and MTL_SHADER_VALIDATION unset for timing commands.",
+  "scope": "Apple M4 Pro local experiments when recorded here; device names are retained per report. Not NVIDIA/CoreX/full-model validation.",
+  "reproduction": "bash scripts/verify-metal-advances.sh <new-output-directory>"
+}

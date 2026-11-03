@@ -5,15 +5,20 @@ model workload on a qualified target. Milestones are evidence gates, not release
 dates or a promise of complete CUDA compatibility. Metal and CoreX development
 can proceed in parallel; results remain specific to the backend tested.
 
-## Current foundation — executed on Metal
+## Implemented native foundation
 
 - Checked expression frontend and operation IR with MSL/CoreX source generation.
 - Owned buffers, resource validation, compilation reuse and ordered execution.
 - AXPY, Add, GEMM, RMSNorm, SwiGLU, softmax and custom elementwise expressions.
-- Nineteen GPU numerical cases, regular/irregular synthetic MLPs, host tests and
-  an explicitly executed GPU ownership/ordering test.
+- Native FP32 SIMD-group GEMM, Apple MPS GEMM and ordered mixed MPS/shader batches.
+- Small causal/noncausal forward self-attention, with an online-softmax kernel
+  and a materialized reference path. No KV cache or backward pass.
+- Alpha 1 execution history: nineteen GPU numerical cases, regular/irregular
+  synthetic MLPs and an explicitly executed GPU ownership/ordering test.
 
-Evidence: [native results](../reports/NATIVE_RESULTS.md).
+History: [alpha 1 native results](../reports/NATIVE_RESULTS.md).
+Expansion: [implementation and limits](METAL_ADVANCES.md),
+[validation and measurements](../reports/METAL_ADVANCES.md).
 Implementation: [IR](../src/runtime/ir.rs), [runtime contract](../src/runtime/mod.rs),
 [Metal](../src/runtime/metal.rs), [CoreX adapter](../src/runtime/corex.rs) and
 [workloads](../src/runtime/workloads.rs).
@@ -24,10 +29,11 @@ Implementation: [IR](../src/runtime/ir.rs), [runtime contract](../src/runtime/mo
 driver, SDK and compiler versions; confirm the architecture flag; build the
 native bridge and compile the emitted kernels.
 
-**Done when:** the same supported operations and MLP checks run successfully on
+**Done when:** the shared operation subset and MLP checks run successfully on
 the device, with independent reference values, raw reports, unsupported cases
 and a reproducible environment manifest. A source export or successful host
-build alone does not satisfy this milestone.
+build alone does not satisfy this milestone. Metal-specific SIMD/MPS/attention
+operations need separate CoreX implementations and qualification.
 
 Starting points: [CoreX setup](COREX.md),
 [native runtime guide](NATIVE_RUNTIME.md),
@@ -57,8 +63,10 @@ and [possible commercial evaluation scope](COMMERCIAL.md).
 
 ## 4. Optimize the measured bottlenecks
 
-**Work:** evaluate fusion, device-specific schedules, memory reuse and execution
-plans. Add correctness-gated tuning and a persistent cache with explicit
+**Work:** extend beyond the implemented SIMD GEMM, MPS integration and small
+online-attention kernel: evaluate tiled/fused attention with K/V reuse,
+device-specific schedules, memory reuse and execution plans. Add
+correctness-gated tuning and a persistent cache with explicit
 compiler/driver/device invalidation rules.
 
 **Done when:** changes improve the agreed workload at the same quality and
@@ -67,7 +75,7 @@ and raw samples; do not promote a single kernel result into a model-wide claim.
 
 ## 5. Expand only with a concrete workload
 
-Candidate extensions include attention/KV-cache integration, additional
+Candidate extensions include full-model attention/KV-cache integration, additional
 precisions, backward operators, optimizers, collective communication and other
 vendor backends. Each requires its own semantics, numerical tests and target
 execution. Training additionally needs gradient checks and convergence/time-to-

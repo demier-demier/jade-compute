@@ -1,0 +1,237 @@
+{
+  "experiment": "native_fp32_self_attention",
+  "host_arch": "aarch64",
+  "host_os": "macos",
+  "input_amplitude": 1.0,
+  "logical_global_scratch_bytes": {
+    "materialized_reference": 8388608,
+    "online_simd": 0
+  },
+  "passed": true,
+  "ratio_materialized_to_online_gpu": 1.1215654891010756,
+  "ratio_materialized_to_online_host": 1.1090310202519882,
+  "runtime": {
+    "backend": "native-metal",
+    "device": "Apple M4 Pro",
+    "execution": "direct MTLBuffer/MTLComputePipelineState and explicit MPS GEMM; ordered synchronous command buffers",
+    "limitations": [
+      "FP32 Jade IR; explicit SIMD-group matrix operations where selected; no NVIDIA Tensor Core/WMMA ABI",
+      "Apple7+ SIMD-group capability gate: true",
+      "Shared storage and thread-confined synchronous API; no asynchronous stream interface",
+      "GPU timings cover the full command buffer, including dependencies between jobs",
+      "Dispatch counts are logical operations; MPS internal GPU kernel counts are opaque",
+      "Metal validation does not establish Chinese-GPU support or performance"
+    ]
+  },
+  "sample_order": [
+    [
+      "materialized_reference",
+      "online_simd"
+    ],
+    [
+      "online_simd",
+      "materialized_reference"
+    ],
+    [
+      "materialized_reference",
+      "online_simd"
+    ],
+    [
+      "online_simd",
+      "materialized_reference"
+    ],
+    [
+      "materialized_reference",
+      "online_simd"
+    ],
+    [
+      "online_simd",
+      "materialized_reference"
+    ],
+    [
+      "materialized_reference",
+      "online_simd"
+    ],
+    [
+      "online_simd",
+      "materialized_reference"
+    ],
+    [
+      "materialized_reference",
+      "online_simd"
+    ]
+  ],
+  "schema_version": 1,
+  "scope": "Resident FP32 self-attention forward only, scale=1/sqrt(head_dim), optional causal mask. Online softmax recurrence; no S*S score buffer. Baseline is this project's scalar materialized QK/softmax/PV, not optimized FlashAttention, MPS attention, MLX or a complete model. Both paths retain quadratic arithmetic. Excludes compile, allocation, transfer and CPU oracle.",
+  "scratch_scope": "Algorithm-level score/probability buffers only, not measured process/device peak. Excludes common Q/K/V/O, driver allocations and registers. Benchmark keeps both paths allocated.",
+  "shape": {
+    "causal": false,
+    "head_dim": 64,
+    "heads": 4,
+    "sequence": 512
+  },
+  "tolerance": {
+    "atol": 0.00005,
+    "rtol": 0.00005
+  },
+  "unix_time": 1793722754,
+  "validation": "All output values checked against independent materialized FP64 reference before and after timing; input immutability checked",
+  "variants": [
+    {
+      "final_check": {
+        "all_finite": true,
+        "elements": 131072,
+        "max_abs_error": 1.2392166771901802e-7,
+        "max_relative_error": 0.0004500129697822155
+      },
+      "initial_check": {
+        "all_finite": true,
+        "elements": 131072,
+        "max_abs_error": 1.2392166771901802e-7,
+        "max_relative_error": 0.0004500129697822155
+      },
+      "name": "materialized_reference",
+      "timing": {
+        "max_host_ms": 0.5205042,
+        "median_gpu_ms": 0.49051666665036464,
+        "median_host_ms": 0.5072292,
+        "min_host_ms": 0.4625125,
+        "samples": [
+          {
+            "dispatches": 30,
+            "gpu_ms": 4.919625000184169,
+            "host_ms": 5.131958,
+            "repeats": 10
+          },
+          {
+            "dispatches": 30,
+            "gpu_ms": 4.787041665622382,
+            "host_ms": 4.9585,
+            "repeats": 10
+          },
+          {
+            "dispatches": 30,
+            "gpu_ms": 4.905166666503646,
+            "host_ms": 5.086125,
+            "repeats": 10
+          },
+          {
+            "dispatches": 30,
+            "gpu_ms": 4.488083333853865,
+            "host_ms": 4.67675,
+            "repeats": 10
+          },
+          {
+            "dispatches": 30,
+            "gpu_ms": 5.0627916662051575,
+            "host_ms": 5.205042,
+            "repeats": 10
+          },
+          {
+            "dispatches": 30,
+            "gpu_ms": 4.5029583325231215,
+            "host_ms": 4.648167,
+            "repeats": 10
+          },
+          {
+            "dispatches": 30,
+            "gpu_ms": 5.025124999519903,
+            "host_ms": 5.187708,
+            "repeats": 10
+          },
+          {
+            "dispatches": 30,
+            "gpu_ms": 4.481874999328284,
+            "host_ms": 4.625125,
+            "repeats": 10
+          },
+          {
+            "dispatches": 30,
+            "gpu_ms": 4.932499999995343,
+            "host_ms": 5.072292,
+            "repeats": 10
+          }
+        ]
+      }
+    },
+    {
+      "final_check": {
+        "all_finite": true,
+        "elements": 131072,
+        "max_abs_error": 1.341479593658379e-7,
+        "max_relative_error": 0.0004688120943795865
+      },
+      "initial_check": {
+        "all_finite": true,
+        "elements": 131072,
+        "max_abs_error": 1.341479593658379e-7,
+        "max_relative_error": 0.0004688120943795865
+      },
+      "name": "online_simd",
+      "timing": {
+        "max_host_ms": 0.5158083,
+        "median_gpu_ms": 0.4373499999928754,
+        "median_host_ms": 0.45736250000000006,
+        "min_host_ms": 0.4474333,
+        "samples": [
+          {
+            "dispatches": 10,
+            "gpu_ms": 4.415875000631786,
+            "host_ms": 5.1580829999999995,
+            "repeats": 10
+          },
+          {
+            "dispatches": 10,
+            "gpu_ms": 4.372499999590218,
+            "host_ms": 4.562125,
+            "repeats": 10
+          },
+          {
+            "dispatches": 10,
+            "gpu_ms": 4.373499999928754,
+            "host_ms": 4.586041,
+            "repeats": 10
+          },
+          {
+            "dispatches": 10,
+            "gpu_ms": 4.377499999463907,
+            "host_ms": 4.64625,
+            "repeats": 10
+          },
+          {
+            "dispatches": 10,
+            "gpu_ms": 4.341541667599813,
+            "host_ms": 4.4805,
+            "repeats": 10
+          },
+          {
+            "dispatches": 10,
+            "gpu_ms": 4.337416667112848,
+            "host_ms": 4.474333,
+            "repeats": 10
+          },
+          {
+            "dispatches": 10,
+            "gpu_ms": 4.37262500054203,
+            "host_ms": 4.519083,
+            "repeats": 10
+          },
+          {
+            "dispatches": 10,
+            "gpu_ms": 4.41987500016694,
+            "host_ms": 4.573625000000001,
+            "repeats": 10
+          },
+          {
+            "dispatches": 10,
+            "gpu_ms": 4.441333332579234,
+            "host_ms": 4.593083,
+            "repeats": 10
+          }
+        ]
+      }
+    }
+  ],
+  "warmup_repeats_per_variant": 3,
+  "zero_qk": false
+}

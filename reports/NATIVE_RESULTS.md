@@ -1,5 +1,9 @@
 # Native runtime validation — 2026-11-03
 
+Historical alpha.1 experiment. Its manifest belongs to the source released as
+`v0.1.0-alpha.1`, not the expanded current runtime. For SIMD matrices, mixed MPS
+execution and online attention, see [the alpha.2 measurements](METAL_ADVANCES.md).
+
 This is the new direct Metal backend, not the previous wgpu backend.
 Hardware: Apple M4 Pro. Rust 1.90.0, release build, generated FP32 MSL kernels,
 Metal fast math disabled. Native CoreX execution is not available on this host.

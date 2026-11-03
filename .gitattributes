@@ -1,0 +1,4 @@
+# Generated evidence stays byte-identical to its recorded hashes.
+reports/generated-native/** linguist-generated=true
+reports/metal-advances/*.metal linguist-generated=true whitespace=-blank-at-eof
+assets/*.svg linguist-generated=true

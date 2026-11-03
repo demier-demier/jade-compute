@@ -16,17 +16,22 @@ additional work in the [coverage map](CUDA_RECONSTRUCTION.md).
 
 ## Is it faster than NVIDIA or CUDA?
 
-That has not been demonstrated. The recorded native MLP experiment compares
+That has not been demonstrated. The historical alpha 1 native MLP experiment compares
 batched submission with synchronization after each operation, on the same Mac
 and with the same kernels. Its final 5.800× ratio applies to that baseline only;
 the earlier 7.813× run also shows measurement variation. See the
-[raw results and measurement scope](../reports/NATIVE_RESULTS.md).
+[raw results and measurement scope](../reports/NATIVE_RESULTS.md). The later
+[Metal experiments](METAL_ADVANCES.md) include an Apple MPS GEMM baseline;
+their [results](../reports/METAL_ADVANCES.md) remain device- and workload-specific.
 
 ## Has it actually run on a GPU?
 
-Yes: the direct Metal backend ran on an Apple M4 Pro. Nineteen numerical cases
-covered 6,456 values against independent FP64 CPU references. Regular and
-irregular synthetic MLP blocks also passed. CoreX has not been compiled against
+Yes: the direct Metal backend ran on an Apple M4 Pro. The alpha 1 record contains
+nineteen numerical cases covering 6,456 values against independent FP64 CPU
+references, plus regular and irregular synthetic MLP blocks. The expansion adds
+SIMD-group GEMM, forward self-attention and native MPS, including mixed MPS/shader
+batches; see its [validation record](../reports/METAL_ADVANCES.md).
+CoreX has not been compiled against
 the vendor SDK or executed on an Iluvatar GPU. Source emission is a separate
 result from target validation.
 
@@ -39,10 +44,13 @@ and changing the host language alone does not make GPU math faster.
 
 ## Can it run a trained LLM or train a model?
 
-The current example is a six-operation residual MLP with synthetic weights.
-There is no tokenizer, checkpoint loader, attention/KV cache, token server,
-autograd, optimizer or distributed training implementation. These require
-separate engineering and model-level validation.
+No complete model is integrated. There is a six-operation residual MLP with
+synthetic weights and a separate small FP32 forward self-attention implementation.
+Attention supports contiguous `[H,S,D]` tensors, including causal mode, within
+the [documented limits](METAL_ADVANCES.md#forward-self-attention). There is no
+tokenizer, checkpoint loader, KV cache, token server, backward pass, autograd,
+optimizer or distributed training implementation. These require separate
+engineering and model-level validation.
 
 ## Which Chinese GPUs are supported?
 

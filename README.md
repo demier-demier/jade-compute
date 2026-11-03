@@ -12,11 +12,11 @@
 
 <p align="center">
   <a href="#reproduce-the-metal-experiment">Reproduction</a> ·
-  <a href="reports/NATIVE_RESULTS.md">Measured results</a> ·
+  <a href="reports/METAL_ADVANCES.md">Measured results</a> ·
   <a href="docs/ROADMAP.md">Roadmap</a> ·
   <a href="docs/COMMERCIAL.md">Commercial direction</a> ·
   <a href="https://www.linkedin.com/in/bernardo-demier-3176001ab/">Contact Bernardo</a> ·
-  <a href="reports/RESULTADOS_PREVIOS_PT.md">Português</a>
+  <a href="reports/AVANCOS_METAL_PT.md">Português</a>
 </p>
 
 ## One compute description. Native GPU paths. Inspectable evidence.
@@ -41,8 +41,10 @@ complete LLM, or demonstrate a speed advantage over NVIDIA.
   and CoreX C++; the same fused expression can target both source languages.
 - **A native runtime.** Owned buffers, exact transfers, pipeline reuse, resource
   validation and ordered command batching.
-- **AI building blocks.** GEMM, RMSNorm, SwiGLU, Softmax, AXPY, Add and fused
-  elementwise expressions; a six-operation synthetic residual MLP.
+- **Native matrix acceleration.** FP32 SIMD-group GEMM and explicit Apple MPS
+  library operations mixed with custom kernels in one ordered batch.
+- **AI building blocks.** Causal/noncausal online self-attention, RMSNorm, SwiGLU,
+  Softmax and fused expressions; a synthetic residual MLP with selectable GEMM.
 - **Evidence alongside code.** Independent FP64 oracles, raw timing samples,
   generated kernels, source hashes and explicit measurement boundaries.
 
@@ -50,7 +52,7 @@ complete LLM, or demonstrate a speed advantage over NVIDIA.
 
 | Path | Current status | Evidence / next step |
 | :--- | :--- | :--- |
-| Native Apple Metal | **Executed locally** on Apple M4 Pro | 19 numerical cases, 6,456 checked outputs; synthetic MLP validated |
+| Native Apple Metal | **Executed locally** on Apple M4 Pro | SIMD matrices, mixed MPS/shader batches and forward attention; [62 new case/implementation checks](reports/METAL_ADVANCES.md) |
 | Iluvatar CoreX | **Source prepared**; SDK build and device execution pending | Qualify exact GPU, SDK, driver and compiler target with a hardware partner |
 | Portable wgpu | Earlier GEMM workbench; tested on Metal | [Historical measurements](reports/LOCAL_RESULTS.md); Vulkan requires a compatible driver |
 | Other Chinese accelerators | Research only; no backend claimed | [Hardware landscape and official sources](docs/HARDWARE.md) |
@@ -60,8 +62,8 @@ GPU execution or CoreX compatibility.
 
 ## Reproduce the Metal experiment
 
-The recorded GPU results use **Apple M4 Pro / macOS**. You need a Metal-capable
-Mac, Apple command-line developer tools and Rust through
+The recorded GPU results use **Apple M4 Pro / macOS**. You need an Apple Silicon
+Mac with Apple7-or-newer GPU capabilities, Apple developer tools and Rust through
 [rustup](https://rustup.rs/). The repository pins Rust 1.90.0. These commands
 document reproduction; they do not grant a separate license. See
 [licensing status](RIGHTS.md) and contact the maintainer about evaluation or reuse.
@@ -74,14 +76,20 @@ cargo build --release --locked --bins
 mkdir -p target/demo
 
 ./target/release/jade-runtime info
-./target/release/jade-runtime verify --report target/demo/verify.json
-./target/release/jade-runtime mlp --report target/demo/mlp.json
+./target/release/jade-runtime metal-verify --report target/demo/verify.json
+./target/release/jade-runtime metal-gemm --report target/demo/gemm.json
+./target/release/jade-runtime metal-attention --causal --report target/demo/attention.json
 ```
 
 The commands query the device, validate every output in the native conformance
-suite, then execute and measure a synthetic MLP block. Reports go into `target/`
-so a new run preserves the published evidence. These are generated weights,
-not a trained model or token-serving benchmark.
+suite, then compare GEMM and attention implementations on resident tensors. Reports
+go into `target/` to preserve the published evidence. The runtime checks GPU
+capabilities and rejects unsupported SIMD paths. These are synthetic operator
+experiments, not a trained model or token-serving benchmark.
+
+For a six-operation AI block using MPS matrix multiplication alongside Jade
+kernels, run `./target/release/jade-runtime mlp --mps-gemm`. Use `--simd-gemm` for Jade's custom
+SIMD-group path. [Full contracts and reproduction guide →](docs/METAL_ADVANCES.md)
 
 ### Generate both native sources
 
@@ -104,42 +112,54 @@ the [native runtime guide](docs/NATIVE_RUNTIME.md#native-corex) with the exact
 architecture and SDK supplied by Iluvatar. The Rust host language alone does
 not make a mathematical kernel faster.
 
-## A measured local experiment
+## Native Metal: measured progress
 
-How much does submission strategy matter for a small, resident MLP block?
-This experiment executes the **same six kernels** either in an ordered batch
-or with a synchronization after every dispatch.
+The new preview adds cooperative matrix operations, SIMD reductions, online
+self-attention and mixed MPS/custom-kernel batches. It implements these concepts
+with **public Apple APIs**. It does not emulate NVIDIA Tensor Cores, translate
+WMMA/PTX or reproduce the complete FlashAttention implementation.
 
-<img src="assets/benchmark-submission.svg" alt="Seven measured host-latency samples per strategy on Apple M4 Pro. Median batched latency: 0.1941 ms per synthetic MLP block. Synchronize each dispatch: 1.1256 ms per block. Lower is better." width="100%">
+<img src="assets/metal-advances.svg" alt="Raw GPU timing samples and medians on Apple M4 Pro: previous Jade GEMM, custom SIMD-group GEMM and native Apple MPS; materialized versus online self-attention." width="100%">
 
-| Apple M4 Pro · FP32 · batch 8 / width 128 / hidden 256 | Result |
-| :--- | ---: |
-| Ordered batch, median host time per block | **0.1941 ms** |
-| Synchronize each dispatch, median host time per block | **1.1256 ms** |
-| Ratio within this experiment | **5.80×** |
-| Maximum absolute output error vs FP64 reference | **2.01 × 10⁻⁷** |
+**Median GPU milliseconds per operation · FP32 · Apple M4 Pro · lower is better**
 
-Seven alternating rounds, ten block repeats per round, resident buffers. Host
-time includes encoding, submission and completion; it excludes compilation,
-allocation, initial upload and readback. Samples vary substantially and are
-shown individually. The baseline intentionally synchronizes frequently.
+| GEMM shape | Previous Jade | New Jade SIMD | Apple MPS, packed rows |
+| :--- | ---: | ---: | ---: |
+| 512 × 512 × 512 | 0.16295 | **0.11692** | **0.05726** |
+| 1024 × 1024 × 1024 | 1.25620 | **0.85020** | **0.40820** |
 
-A [second reproduction before publication](reports/native-metal-mlp-reproduction.json)
-measured **0.2094 ms vs 0.9312 ms (4.45×)** on the same Mac. The earlier run
-plotted above is preserved; the ratio is not a stable performance guarantee.
+The custom 1024³ kernel is **1.48× faster than the previous Jade kernel** in
+this run. Apple's MPS remains faster; the runtime can now use it directly in
+mixed operation batches. This is an Apple-library integration, not a claim
+that Jade invented or outperformed MPS.
 
-**This is a scheduling comparison, not a CUDA, NVIDIA, MPS, vendor BLAS or
-full-model speedup.** No Chinese-GPU performance result is claimed.
+Causal self-attention at **4 heads × 512 positions × 64 channels** measured
+**0.34967 → 0.25011 ms (1.40×)** against this project's scalar materialized
+reference. The online path avoids **8 MiB of score/probability scratch** for
+that shape. This is algorithm-level buffer accounting, not measured peak memory.
+The comparator is not optimized FlashAttention, MLX or a full model.
 
-[Methodology and limitations](reports/NATIVE_RESULTS.md) ·
-[Raw samples](reports/native-metal-mlp.json) ·
-[Correctness report](reports/native-metal-verify.json) ·
-[Recorded provenance](reports/native-manifest.json)
+Nine interleaved samples per variant, ten repeats per sample, after warmup.
+GPU timing covers the complete command buffer; compile, allocation, transfers
+and CPU references are excluded. Raw host timings are also retained. All tested
+shapes, including vector and ragged cases, are in the report. No NVIDIA or
+Chinese-GPU speedup is claimed.
+
+**Validation:** 62 case/implementation checks covering 509,710 output values,
+including FP32 precision probes; 12 host tests and 3 explicit GPU tests passed.
+Metal API and shader validation were enabled for correctness runs and disabled
+for timings. Both synthetic MLP modes validated all 32,768 outputs.
+
+[Measured results and limitations](reports/METAL_ADVANCES.md) ·
+[Raw data and source hashes](reports/metal-advances/manifest.json) ·
+[Native implementation guide](docs/METAL_ADVANCES.md) ·
+[Earlier submission-overhead experiment](reports/NATIVE_RESULTS.md)
 
 ## Explore the engineering
 
 | Start here | What it answers |
 | :--- | :--- |
+| [Native Metal advances](docs/METAL_ADVANCES.md) | SIMD matrices, online attention and mixed MPS execution |
 | [Native runtime and compiler](docs/NATIVE_RUNTIME.md) | How memory, compilation and execution work |
 | [CUDA reconstruction map](docs/CUDA_RECONSTRUCTION.md) | Which ecosystem layers exist and which are still missing |
 | [Hardware landscape](docs/HARDWARE.md) | Chinese accelerator families, software stacks and evidence |
@@ -148,7 +168,8 @@ full-model speedup.** No Chinese-GPU performance result is claimed.
 | [FAQ](docs/FAQ.md) | Compatibility, performance, Rust and licensing |
 | [Changelog](CHANGELOG.md) | What is included in the research preview |
 
-Em português: [resultados prévios](reports/RESULTADOS_PREVIOS_PT.md) ·
+Em português: [avanços no Metal](reports/AVANCOS_METAL_PT.md) ·
+[resultados iniciais](reports/RESULTADOS_PREVIOS_PT.md) ·
 [reconstrução e limites](docs/RECONSTRUCAO_CUDA_PT.md) ·
 [plano de desenvolvimento](docs/PLANO_PRODUTO_PT.md).
 

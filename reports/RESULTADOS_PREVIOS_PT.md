@@ -1,5 +1,8 @@
 # Resultados prévios — 03/11/2026
 
+Etapa histórica alpha.1. Os avanços posteriores em matrizes SIMD, atenção online
+e execução MPS estão em [Avanços nativos no Metal](AVANCOS_METAL_PT.md).
+
 Estes resultados vêm das execuções locais já registradas no Apple M4 Pro.
 Não houve uma nova medição para preparar o envio ao GitHub. O código é um
 protótipo de runtime e compilador; a reconstrução integral do CUDA permanece

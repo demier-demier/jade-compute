@@ -1,0 +1,190 @@
+{
+  "batched_samples": [
+    {
+      "dispatches": 60,
+      "gpu_ms": 2.3352083335339557,
+      "host_ms": 3.193791,
+      "repeats": 10
+    },
+    {
+      "dispatches": 60,
+      "gpu_ms": 0.8009583343664417,
+      "host_ms": 1.355625,
+      "repeats": 10
+    },
+    {
+      "dispatches": 60,
+      "gpu_ms": 0.6926250007381896,
+      "host_ms": 1.345375,
+      "repeats": 10
+    },
+    {
+      "dispatches": 60,
+      "gpu_ms": 0.6952083331270842,
+      "host_ms": 1.4387919999999998,
+      "repeats": 10
+    },
+    {
+      "dispatches": 60,
+      "gpu_ms": 0.6451249992096564,
+      "host_ms": 1.2816670000000001,
+      "repeats": 10
+    },
+    {
+      "dispatches": 60,
+      "gpu_ms": 0.7429166671499843,
+      "host_ms": 1.415333,
+      "repeats": 10
+    },
+    {
+      "dispatches": 60,
+      "gpu_ms": 0.6877499999973224,
+      "host_ms": 1.2413750000000001,
+      "repeats": 10
+    },
+    {
+      "dispatches": 60,
+      "gpu_ms": 0.6867083338875091,
+      "host_ms": 1.492042,
+      "repeats": 10
+    },
+    {
+      "dispatches": 60,
+      "gpu_ms": 0.7170000008045463,
+      "host_ms": 1.2825829999999998,
+      "repeats": 10
+    }
+  ],
+  "final_check": {
+    "all_finite": true,
+    "elements": 32768,
+    "max_abs_error": 6.768883539787218e-7,
+    "max_relative_error": 0.0010545180561052914
+  },
+  "gemm_mode": "mps",
+  "host_arch": "aarch64",
+  "host_os": "macos",
+  "initial_check": {
+    "all_finite": true,
+    "elements": 32768,
+    "max_abs_error": 6.768883539787218e-7,
+    "max_relative_error": 0.0010545180561052914
+  },
+  "median_batched_host_ms_per_block": 0.1355625,
+  "median_separate_host_ms_per_block": 0.9002625,
+  "output_elements": 32768,
+  "ratio_separate_to_batched": 6.640940525587828,
+  "runtime": {
+    "backend": "native-metal",
+    "device": "Apple M4 Pro",
+    "execution": "direct MTLBuffer/MTLComputePipelineState and explicit MPS GEMM; ordered synchronous command buffers",
+    "limitations": [
+      "FP32 Jade IR; explicit SIMD-group matrix operations where selected; no NVIDIA Tensor Core/WMMA ABI",
+      "Apple7+ SIMD-group capability gate: true",
+      "Shared storage and thread-confined synchronous API; no asynchronous stream interface",
+      "GPU timings cover the full command buffer, including dependencies between jobs",
+      "Dispatch counts are logical operations; MPS internal GPU kernel counts are opaque",
+      "Metal validation does not establish Chinese-GPU support or performance"
+    ]
+  },
+  "schema_version": 1,
+  "scope": "Same logical operations and resident tensors; one ordered batch versus synchronizing every dispatch. Excludes compilation, allocation, upload and readback. Not a CUDA/vendor-BLAS/full-model comparison.",
+  "separate_submission_samples": [
+    {
+      "dispatches": 60,
+      "gpu_ms": 3.1582916653860593,
+      "host_ms": 13.091292,
+      "repeats": 10
+    },
+    {
+      "dispatches": 60,
+      "gpu_ms": 2.80087500323134,
+      "host_ms": 11.533167,
+      "repeats": 10
+    },
+    {
+      "dispatches": 60,
+      "gpu_ms": 0.7664999957341934,
+      "host_ms": 9.067791,
+      "repeats": 10
+    },
+    {
+      "dispatches": 60,
+      "gpu_ms": 0.8221250118367607,
+      "host_ms": 9.002625,
+      "repeats": 10
+    },
+    {
+      "dispatches": 60,
+      "gpu_ms": 0.7673333275306504,
+      "host_ms": 9.128625,
+      "repeats": 10
+    },
+    {
+      "dispatches": 60,
+      "gpu_ms": 0.8221666648751125,
+      "host_ms": 8.995750000000001,
+      "repeats": 10
+    },
+    {
+      "dispatches": 60,
+      "gpu_ms": 0.7854583363950951,
+      "host_ms": 8.204625,
+      "repeats": 10
+    },
+    {
+      "dispatches": 60,
+      "gpu_ms": 0.8039999993343372,
+      "host_ms": 7.783959,
+      "repeats": 10
+    },
+    {
+      "dispatches": 60,
+      "gpu_ms": 0.7263333282025997,
+      "host_ms": 7.7801670000000005,
+      "repeats": 10
+    }
+  ],
+  "shape": {
+    "batch": 64,
+    "hidden": 1024,
+    "width": 512
+  },
+  "specs": [
+    {
+      "cols": 512,
+      "epsilon": 9.999999747378752e-6,
+      "op": "rms_norm",
+      "rows": 64
+    },
+    {
+      "k": 512,
+      "m": 64,
+      "n": 1024,
+      "op": "gemm_mps"
+    },
+    {
+      "k": 512,
+      "m": 64,
+      "n": 1024,
+      "op": "gemm_mps"
+    },
+    {
+      "len": 65536,
+      "op": "swi_glu"
+    },
+    {
+      "k": 1024,
+      "m": 64,
+      "n": 512,
+      "op": "gemm_mps"
+    },
+    {
+      "len": 32768,
+      "op": "add"
+    }
+  ],
+  "trained_model": false,
+  "unix_time": 1793722755,
+  "workload": "synthetic residual MLP: RMSNorm -> gate/up GEMM -> SwiGLU -> down GEMM -> residual add"
+}

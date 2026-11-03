@@ -1,0 +1,320 @@
+{
+  "experiment": "native_fp32_gemm",
+  "host_arch": "aarch64",
+  "host_os": "macos",
+  "host_timing_caveat": "MPS default per-encode validation is inside its host timer; Jade binding validation is before its timer. GPU timestamps are the cleaner compute comparison.",
+  "mps_baseline": "Native MPSMatrixMultiplication, packed row strides, Float32, options=None. No AllowReducedPrecision. Packed rows are valid but not necessarily Apple's fastest recommended stride.",
+  "passed": true,
+  "precision": "FP32 inputs, output and accumulation; no FP16 conversion or NVIDIA TF32 mode",
+  "ratio_mps_to_simd_gpu": 0.45294117941621814,
+  "ratio_mps_to_simd_host": 1.329573934837093,
+  "ratio_register_to_simd_gpu": 2.0914706006862454,
+  "ratio_register_to_simd_host": 1.4495973266499584,
+  "runtime": {
+    "backend": "native-metal",
+    "device": "Apple M4 Pro",
+    "execution": "direct MTLBuffer/MTLComputePipelineState and explicit MPS GEMM; ordered synchronous command buffers",
+    "limitations": [
+      "FP32 Jade IR; explicit SIMD-group matrix operations where selected; no NVIDIA Tensor Core/WMMA ABI",
+      "Apple7+ SIMD-group capability gate: true",
+      "Shared storage and thread-confined synchronous API; no asynchronous stream interface",
+      "GPU timings cover the full command buffer, including dependencies between jobs",
+      "Dispatch counts are logical operations; MPS internal GPU kernel counts are opaque",
+      "Metal validation does not establish Chinese-GPU support or performance"
+    ]
+  },
+  "sample_order": [
+    [
+      "jade_register_tiled",
+      "jade_simdgroup_fp32",
+      "apple_mps_fp32"
+    ],
+    [
+      "jade_simdgroup_fp32",
+      "apple_mps_fp32",
+      "jade_register_tiled"
+    ],
+    [
+      "apple_mps_fp32",
+      "jade_register_tiled",
+      "jade_simdgroup_fp32"
+    ],
+    [
+      "jade_register_tiled",
+      "jade_simdgroup_fp32",
+      "apple_mps_fp32"
+    ],
+    [
+      "jade_simdgroup_fp32",
+      "apple_mps_fp32",
+      "jade_register_tiled"
+    ],
+    [
+      "apple_mps_fp32",
+      "jade_register_tiled",
+      "jade_simdgroup_fp32"
+    ],
+    [
+      "jade_register_tiled",
+      "jade_simdgroup_fp32",
+      "apple_mps_fp32"
+    ],
+    [
+      "jade_simdgroup_fp32",
+      "apple_mps_fp32",
+      "jade_register_tiled"
+    ],
+    [
+      "apple_mps_fp32",
+      "jade_register_tiled",
+      "jade_simdgroup_fp32"
+    ]
+  ],
+  "schema_version": 1,
+  "scope": "Resident row-major C=A*B. Same device, buffers and precision. Host encode/submit/wait and separate native GPU timestamps. Excludes compile, allocation, upload, readback, oracle and MPS object setup. No NVIDIA or full-model comparison.",
+  "shape": {
+    "k": 129,
+    "m": 127,
+    "n": 257
+  },
+  "tolerance": {
+    "atol": 0.00005,
+    "rtol": 0.00005
+  },
+  "unix_time": 1793722753,
+  "validation": "All output elements against independent FP64 CPU reference before and after timing; input immutability checked",
+  "variants": [
+    {
+      "final_check": {
+        "all_finite": true,
+        "elements": 32639,
+        "max_abs_error": 6.043185842852239e-7,
+        "max_relative_error": 0.0015904747241446415
+      },
+      "initial_check": {
+        "all_finite": true,
+        "elements": 32639,
+        "max_abs_error": 6.043185842852239e-7,
+        "max_relative_error": 0.0015904747241446415
+      },
+      "name": "jade_register_tiled",
+      "timing": {
+        "max_host_ms": 0.050158400000000006,
+        "median_gpu_ms": 0.02962916660180781,
+        "median_host_ms": 0.0433792,
+        "min_host_ms": 0.040245899999999994,
+        "samples": [
+          {
+            "dispatches": 10,
+            "gpu_ms": 0.2901250009017531,
+            "host_ms": 0.443,
+            "repeats": 10
+          },
+          {
+            "dispatches": 10,
+            "gpu_ms": 0.33487500149931293,
+            "host_ms": 0.493292,
+            "repeats": 10
+          },
+          {
+            "dispatches": 10,
+            "gpu_ms": 0.30054166563786566,
+            "host_ms": 0.433792,
+            "repeats": 10
+          },
+          {
+            "dispatches": 10,
+            "gpu_ms": 0.29712499963352457,
+            "host_ms": 0.501584,
+            "repeats": 10
+          },
+          {
+            "dispatches": 10,
+            "gpu_ms": 0.2905416658904869,
+            "host_ms": 0.418167,
+            "repeats": 10
+          },
+          {
+            "dispatches": 10,
+            "gpu_ms": 0.2962916660180781,
+            "host_ms": 0.438792,
+            "repeats": 10
+          },
+          {
+            "dispatches": 10,
+            "gpu_ms": 0.29687500136788003,
+            "host_ms": 0.425,
+            "repeats": 10
+          },
+          {
+            "dispatches": 10,
+            "gpu_ms": 0.2908749993366655,
+            "host_ms": 0.40737500000000004,
+            "repeats": 10
+          },
+          {
+            "dispatches": 10,
+            "gpu_ms": 0.2899583341786638,
+            "host_ms": 0.40245899999999996,
+            "repeats": 10
+          }
+        ]
+      }
+    },
+    {
+      "final_check": {
+        "all_finite": true,
+        "elements": 32639,
+        "max_abs_error": 6.043185842852239e-7,
+        "max_relative_error": 0.0015904747241446415
+      },
+      "initial_check": {
+        "all_finite": true,
+        "elements": 32639,
+        "max_abs_error": 6.043185842852239e-7,
+        "max_relative_error": 0.0015904747241446415
+      },
+      "name": "jade_simdgroup_fp32",
+      "timing": {
+        "max_host_ms": 0.037666700000000004,
+        "median_gpu_ms": 0.014166666551318485,
+        "median_host_ms": 0.029924999999999997,
+        "min_host_ms": 0.0254417,
+        "samples": [
+          {
+            "dispatches": 10,
+            "gpu_ms": 0.13987499914946966,
+            "host_ms": 0.281167,
+            "repeats": 10
+          },
+          {
+            "dispatches": 10,
+            "gpu_ms": 0.14166666551318485,
+            "host_ms": 0.3325,
+            "repeats": 10
+          },
+          {
+            "dispatches": 10,
+            "gpu_ms": 0.18345833268540446,
+            "host_ms": 0.315,
+            "repeats": 10
+          },
+          {
+            "dispatches": 10,
+            "gpu_ms": 0.18487499983166344,
+            "host_ms": 0.37666700000000003,
+            "repeats": 10
+          },
+          {
+            "dispatches": 10,
+            "gpu_ms": 0.16508333283127286,
+            "host_ms": 0.302833,
+            "repeats": 10
+          },
+          {
+            "dispatches": 10,
+            "gpu_ms": 0.1399583343300037,
+            "host_ms": 0.267916,
+            "repeats": 10
+          },
+          {
+            "dispatches": 10,
+            "gpu_ms": 0.17137500071839895,
+            "host_ms": 0.29924999999999996,
+            "repeats": 10
+          },
+          {
+            "dispatches": 10,
+            "gpu_ms": 0.14166666551318485,
+            "host_ms": 0.272792,
+            "repeats": 10
+          },
+          {
+            "dispatches": 10,
+            "gpu_ms": 0.1399583343300037,
+            "host_ms": 0.254417,
+            "repeats": 10
+          }
+        ]
+      }
+    },
+    {
+      "final_check": {
+        "all_finite": true,
+        "elements": 32639,
+        "max_abs_error": 6.043185842852239e-7,
+        "max_relative_error": 0.0015904747241446415
+      },
+      "initial_check": {
+        "all_finite": true,
+        "elements": 32639,
+        "max_abs_error": 6.043185842852239e-7,
+        "max_relative_error": 0.0015904747241446415
+      },
+      "name": "apple_mps_fp32",
+      "timing": {
+        "max_host_ms": 0.0847333,
+        "median_gpu_ms": 0.006416666656150483,
+        "median_host_ms": 0.0397875,
+        "min_host_ms": 0.0310292,
+        "samples": [
+          {
+            "dispatches": 10,
+            "gpu_ms": 0.08799999886832666,
+            "host_ms": 0.475333,
+            "repeats": 10
+          },
+          {
+            "dispatches": 10,
+            "gpu_ms": 0.06416666656150483,
+            "host_ms": 0.442792,
+            "repeats": 10
+          },
+          {
+            "dispatches": 10,
+            "gpu_ms": 0.06658333404629957,
+            "host_ms": 0.40487500000000004,
+            "repeats": 10
+          },
+          {
+            "dispatches": 10,
+            "gpu_ms": 0.06062500142434146,
+            "host_ms": 0.39787500000000003,
+            "repeats": 10
+          },
+          {
+            "dispatches": 10,
+            "gpu_ms": 0.0596249992668163,
+            "host_ms": 0.341917,
+            "repeats": 10
+          },
+          {
+            "dispatches": 10,
+            "gpu_ms": 0.0646666667307727,
+            "host_ms": 0.380625,
+            "repeats": 10
+          },
+          {
+            "dispatches": 10,
+            "gpu_ms": 0.07029166772554163,
+            "host_ms": 0.847333,
+            "repeats": 10
+          },
+          {
+            "dispatches": 10,
+            "gpu_ms": 0.05937500100117177,
+            "host_ms": 0.330792,
+            "repeats": 10
+          },
+          {
+            "dispatches": 10,
+            "gpu_ms": 0.06037499952071812,
+            "host_ms": 0.310292,
+            "repeats": 10
+          }
+        ]
+      }
+    }
+  ],
+  "warmup_repeats_per_variant": 3
+}

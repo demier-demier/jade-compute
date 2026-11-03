@@ -1,0 +1,404 @@
+{
+  "generator": "scripts/render-metal-results.py",
+  "generator_sha256": "5efd13bfed447c2acc76b40169e96d304a608d8270945d2f9055db2b3c7e66ec",
+  "matplotlib_version": "3.9.2",
+  "benchmark_reexecuted": false,
+  "device": "Apple M4 Pro",
+  "precision": "FP32",
+  "metric": "GPU milliseconds per complete operation",
+  "calculation": "Each point = sample.gpu_ms / sample.repeats; nine points per variant, median computed from all nine; no host times used.",
+  "sample_count": 108,
+  "source_manifest": {
+    "path": "reports/metal-advances/manifest.json",
+    "sha256": "e5764e25cdaeea356cfdf32a06641510101a90a830e309e5325d61c9bd9b1bba",
+    "source_commit": "ad349266616cc6cbcb51a2a4b46376a438944c4c"
+  },
+  "sources": [
+    {
+      "path": "reports/metal-advances/gemm-512.json",
+      "sha256": "bdd67524874d49dd6c040f2b7d4ed7cc307dc1e51118088a093142cfc0971144",
+      "unix_time": 1793722753,
+      "shape": {
+        "m": 512,
+        "n": 512,
+        "k": 512
+      },
+      "scope": "Resident row-major C=A*B. Same device, buffers and precision. Host encode/submit/wait and separate native GPU timestamps. Excludes compile, allocation, upload, readback, oracle and MPS object setup. No NVIDIA or full-model comparison.",
+      "series": {
+        "jade_register_tiled": {
+          "gpu_ms_per_operation": [
+            0.3278124999269494,
+            0.1604624998435611,
+            0.19096249998256098,
+            0.1629458332899958,
+            0.1738249999107211,
+            0.16898333342396654,
+            0.16293749995384132,
+            0.16152916668943362,
+            0.16127916678669862
+          ],
+          "median_gpu_ms": 0.1629458332899958,
+          "repeats": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10
+          ]
+        },
+        "jade_simdgroup_fp32": {
+          "gpu_ms_per_operation": [
+            0.24496666665072553,
+            0.19807499993476085,
+            0.11942916662519565,
+            0.11691666677506873,
+            0.1153750001321896,
+            0.11479999993753154,
+            0.11553749991435325,
+            0.12210000004415633,
+            0.11637083334790077
+          ],
+          "median_gpu_ms": 0.11691666677506873,
+          "repeats": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10
+          ]
+        },
+        "apple_mps_fp32": {
+          "gpu_ms_per_operation": [
+            0.0993958334220224,
+            0.08048750005400507,
+            0.05554999988817144,
+            0.05726250001316657,
+            0.05538750010600779,
+            0.05972916678729234,
+            0.05536666667467216,
+            0.05681250004272442,
+            0.05797916674055159
+          ],
+          "median_gpu_ms": 0.05726250001316657,
+          "repeats": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "path": "reports/metal-advances/gemm-1024.json",
+      "sha256": "0d4f4b740dcb338f448b1c6e0a738a4d0ff931ea53ddce767744dbcb2d653abc",
+      "unix_time": 1793722753,
+      "shape": {
+        "m": 1024,
+        "n": 1024,
+        "k": 1024
+      },
+      "scope": "Resident row-major C=A*B. Same device, buffers and precision. Host encode/submit/wait and separate native GPU timestamps. Excludes compile, allocation, upload, readback, oracle and MPS object setup. No NVIDIA or full-model comparison.",
+      "series": {
+        "jade_register_tiled": {
+          "gpu_ms_per_operation": [
+            1.2437791667252895,
+            1.2489083334003226,
+            1.2670874999457737,
+            1.258708333443792,
+            1.2630083334443043,
+            1.2713999998595682,
+            1.2322208332989248,
+            1.256199999988894,
+            1.2314125000557397
+          ],
+          "median_gpu_ms": 1.256199999988894,
+          "repeats": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10
+          ]
+        },
+        "jade_simdgroup_fp32": {
+          "gpu_ms_per_operation": [
+            0.8278333332782495,
+            0.8686833332831156,
+            0.850200000058976,
+            0.8297166665215627,
+            0.8618249999926775,
+            0.8428125000136788,
+            0.8350874999450753,
+            0.8606041667007958,
+            0.8617499999672873
+          ],
+          "median_gpu_ms": 0.850200000058976,
+          "repeats": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10
+          ]
+        },
+        "apple_mps_fp32": {
+          "gpu_ms_per_operation": [
+            0.41120000005321344,
+            0.41077916666836245,
+            0.4082000001289998,
+            0.4018333333078772,
+            0.41628750004747417,
+            0.4002541665613535,
+            0.40730416658334434,
+            0.4006291666883044,
+            0.4110500000024331
+          ],
+          "median_gpu_ms": 0.4082000001289998,
+          "repeats": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "path": "reports/metal-advances/attention-256.json",
+      "sha256": "5b4ddda0c80fc281b48e5540874c6fa09a1bb25f5086827cd3f11cd8fd063e30",
+      "unix_time": 1793722754,
+      "shape": {
+        "heads": 4,
+        "sequence": 256,
+        "head_dim": 64,
+        "causal": false
+      },
+      "scope": "Resident FP32 self-attention forward only, scale=1/sqrt(head_dim), optional causal mask. Online softmax recurrence; no S*S score buffer. Baseline is this project's scalar materialized QK/softmax/PV, not optimized FlashAttention, MPS attention, MLX or a complete model. Both paths retain quadratic arithmetic. Excludes compile, allocation, transfer and CPU oracle.",
+      "series": {
+        "materialized_reference": {
+          "gpu_ms_per_operation": [
+            0.12322916663833894,
+            0.1327583333477378,
+            0.12692499985860195,
+            0.12330416666372912,
+            0.12329999990470242,
+            0.13667500006704358,
+            0.13330000001587905,
+            0.12306249991524965,
+            0.13129166673024883
+          ],
+          "median_gpu_ms": 0.12692499985860195,
+          "repeats": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10
+          ]
+        },
+        "online_simd": {
+          "gpu_ms_per_operation": [
+            0.10345416667405516,
+            0.10722500010160729,
+            0.09644583333283663,
+            0.09814999993977835,
+            0.11538750004547182,
+            0.10078750001412118,
+            0.0975916667812271,
+            0.09771250006451737,
+            0.11017083324986743
+          ],
+          "median_gpu_ms": 0.10078750001412118,
+          "repeats": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "path": "reports/metal-advances/attention-512.json",
+      "sha256": "f3a27d721026465727af3d23333141a68f1915cb4e533d8602d56a477059be51",
+      "unix_time": 1793722754,
+      "shape": {
+        "heads": 4,
+        "sequence": 512,
+        "head_dim": 64,
+        "causal": false
+      },
+      "scope": "Resident FP32 self-attention forward only, scale=1/sqrt(head_dim), optional causal mask. Online softmax recurrence; no S*S score buffer. Baseline is this project's scalar materialized QK/softmax/PV, not optimized FlashAttention, MPS attention, MLX or a complete model. Both paths retain quadratic arithmetic. Excludes compile, allocation, transfer and CPU oracle.",
+      "series": {
+        "materialized_reference": {
+          "gpu_ms_per_operation": [
+            0.4919625000184169,
+            0.47870416656223824,
+            0.49051666665036464,
+            0.4488083333853865,
+            0.5062791666205158,
+            0.45029583325231215,
+            0.5025124999519903,
+            0.44818749993282836,
+            0.49324999999953434
+          ],
+          "median_gpu_ms": 0.49051666665036464,
+          "repeats": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10
+          ]
+        },
+        "online_simd": {
+          "gpu_ms_per_operation": [
+            0.4415875000631786,
+            0.4372499999590218,
+            0.4373499999928754,
+            0.43774999994639074,
+            0.4341541667599813,
+            0.4337416667112848,
+            0.437262500054203,
+            0.44198750001669396,
+            0.44413333325792337
+          ],
+          "median_gpu_ms": 0.4373499999928754,
+          "repeats": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "path": "reports/metal-advances/attention-causal-512.json",
+      "sha256": "ddd25c0c47c80635fe429604fce1c19d48492bc4765b8413ab5752fd3f2e4a74",
+      "unix_time": 1793722754,
+      "shape": {
+        "heads": 4,
+        "sequence": 512,
+        "head_dim": 64,
+        "causal": true
+      },
+      "scope": "Resident FP32 self-attention forward only, scale=1/sqrt(head_dim), optional causal mask. Online softmax recurrence; no S*S score buffer. Baseline is this project's scalar materialized QK/softmax/PV, not optimized FlashAttention, MPS attention, MLX or a complete model. Both paths retain quadratic arithmetic. Excludes compile, allocation, transfer and CPU oracle.",
+      "series": {
+        "materialized_reference": {
+          "gpu_ms_per_operation": [
+            0.3237833332605078,
+            0.3345749999425607,
+            0.35656250001920853,
+            0.3496666666251258,
+            0.3619166665885132,
+            0.36302083335613133,
+            0.3273000000262982,
+            0.35599999991973164,
+            0.32427499991172226
+          ],
+          "median_gpu_ms": 0.3496666666251258,
+          "repeats": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10
+          ]
+        },
+        "online_simd": {
+          "gpu_ms_per_operation": [
+            0.2597500000774744,
+            0.2688416667297133,
+            0.25010833342093974,
+            0.24364166674786247,
+            0.2426375000140979,
+            0.24230833350884495,
+            0.24146249998011626,
+            0.25495000008959323,
+            0.2621499999804655
+          ],
+          "median_gpu_ms": 0.25010833342093974,
+          "repeats": [
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10,
+            10
+          ]
+        }
+      }
+    }
+  ],
+  "font": {
+    "family": "DejaVu Sans",
+    "notice": "assets/THIRD_PARTY_NOTICES.md",
+    "license_source": "matplotlib/mpl-data/fonts/ttf/LICENSE_DEJAVU",
+    "license_sha256": "d75938dec098f06f0ac3c00853065d94f020be1c3c62ef1dc2975ba15b4d9b0e"
+  },
+  "assets": {
+    "metal-advances.svg": {
+      "sha256": "fcf9ec2ef67a186c24a37bffa977bff9c291f203ed27d0e49bb5a9241c2e9354"
+    },
+    "metal-advances.png": {
+      "sha256": "4a7205dff605d6f9409ffd59bc14892603ddf91f2822ca771ee84a5f40e4e7e7"
+    }
+  },
+  "png_dimensions": [
+    1920,
+    1128
+  ]
+}

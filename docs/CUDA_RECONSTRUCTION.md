@@ -44,8 +44,8 @@ mapping below is **inferred / planned** unless identified as observed later.
 | Graph execution | CUDA graphs have nodes, dependencies, instantiation, launch and update rules. [Graphs](https://docs.nvidia.com/cuda/cuda-programming-guide/04-special-topics/cuda-graphs.html) | Start with ordered replay of a dispatch list; later add a validated dependency graph and reusable execution plans. A dispatch list is not CUDA Graph API compatibility. | Use stream replay first; native graph availability and update/capture semantics remain to be checked. |
 | Compiler frontend | `nvcc` separates host/device compilation and packages device programs. [NVCC](https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html) | Rust builds a deliberately limited typed kernel specification; backend emitters produce source for the vendor compiler. No arbitrary `.cu` parser. | CoreX compiler invocation and headers are SDK-specific. A source emitter alone is not a working toolchain. |
 | PTX / native machine code | PTX is a virtual ISA; native binaries and SASS inspection are distinct layers. [PTX](https://docs.nvidia.com/cuda/parallel-thread-execution/index.html), [Binary utilities](https://docs.nvidia.com/cuda/cuda-binary-utilities/index.html) | Emit MSL and let Metal generate device code. No PTX interpreter, SASS translator, cubin loader, or binary ABI emulation. | Let CoreX compile source. TianGai 300 native ISA and a complete device-code ABI are unknown here. |
-| Dense math / tensor units | cuBLAS and cuBLASLt provide tuned linear algebra and algorithm selection. [cuBLAS](https://docs.nvidia.com/cuda/cublas/index.html) | Own kernel candidates plus a future native-library baseline; capability-aware matrix intrinsics later. | Existing bridge delegates GEMM to vendor BLAS. Wrapping BLAS alone cannot establish a performance advantage over it. |
-| Neural-network operations | cuDNN supplies neural-network operators, graph execution choices and fused operations. [cuDNN](https://docs.nvidia.com/deeplearning/cudnn/backend/latest/index.html) | Initial RMSNorm, softmax and MLP subset is detailed below; attention, quantization and backward kernels are future extensions. | Compare native libraries and selected custom kernels on actual models; no cuDNN replacement claimed. |
+| Dense math / tensor units | cuBLAS and cuBLASLt provide tuned linear algebra and algorithm selection. [cuBLAS](https://docs.nvidia.com/cuda/cublas/index.html) | Implemented FP32 SIMD-group GEMM and native MPS GEMM, including mixed MPS/shader batches. Native Metal matrix primitives are not a WMMA ABI or NVIDIA Tensor Core emulation. | Existing bridge delegates GEMM to vendor BLAS. Wrapping BLAS alone cannot establish a performance advantage over it. |
+| Neural-network operations | cuDNN supplies neural-network operators, graph execution choices and fused operations. [cuDNN](https://docs.nvidia.com/deeplearning/cudnn/backend/latest/index.html) | RMSNorm, softmax, synthetic MLP and small forward self-attention are implemented; full-model integration, KV cache, quantization and backward kernels remain future work. | Compare native libraries and selected custom kernels on actual models; no cuDNN or TensorRT replacement claimed. |
 | Multi-GPU / distributed | NCCL supplies collective communication and communicator/ordering/failure semantics. [NCCL](https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/index.html) | Future collective interface, topology discovery and correctness tests; not implemented by a single-device runtime. | Requires multiple boards, interconnect information and vendor collective support; unknown today. |
 | Diagnostics and profiling | CUDA tooling includes debuggers, timeline/kernel profilers and memory/race/synchronization checks. [Toolkit](https://docs.nvidia.com/cuda/index.html), [Sanitizer](https://docs.nvidia.com/compute-sanitizer/ComputeSanitizer/index.html) | Error propagation, reference validation, raw timing records, shader source retention; integrate Metal capture/profiling separately. | Need vendor tracing/profiling tools and supported counters. Reject unavailable/invalid GPU timings rather than manufacture them. |
 | Interoperability / advanced features | CUDA also covers graphics/external resources, IPC, cooperative execution, dynamic parallelism and specialized hardware features. [Feature inventory](https://docs.nvidia.com/cuda/cuda-programming-guide/contents.html) | Explicit future capability extensions; not implied by GEMM or MLP support. | Per-feature SDK and hardware validation; no blanket compatibility declaration. |
@@ -82,8 +82,9 @@ an assertion that such a capture has already been inspected. [Metal debugger](ht
 
 The target's official product name is **TianGai 300 / 天垓300**. The spelling
 "Tiangai 300" is treated as this product; **BI-V300**, installed VRAM, minimum
-driver/SDK and compiler architecture flag have not been verified for the user's
-board. No Vulkan support is assumed. [Official product](https://www.iluvatar.com/productDetails?fullCode=cpjs-yj-xlxl-tg300)
+driver/SDK and compiler architecture flag have not been verified for a target
+environment. No board has been supplied for this work, and no Vulkan support is
+assumed. [Official product](https://www.iluvatar.com/productDetails?fullCode=cpjs-yj-xlxl-tg300)
 
 **Documented:** the official ecosystem uses a Linux SDK/compiler and public
 samples containing CUDA-style runtime/library interfaces. Samples show
@@ -112,22 +113,40 @@ aliasing are rejected. This is not an asynchronous CUDA-compatible API.
 checked FP32 operation representation. Elementwise expressions contain inputs,
 finite constants, addition, multiplication, maximum, negation and exponential.
 The frontend validates input references and expression complexity. Additional
-operations are AXPY, addition, naive/register-tiled GEMM, RMSNorm, SwiGLU and
-row softmax. Arbitrary pointers, indexing and control flow are outside this
-initial language. The same specification emits MSL and CoreX C++.
+shared operations are AXPY, addition, naive/register-tiled GEMM, RMSNorm, SwiGLU
+and row softmax. They emit MSL and CoreX C++. Metal-specific variants add
+`GemmSimd`, `GemmMps`, attention scores/application and online attention; CoreX
+rejects these variants explicitly. `GemmMps` constructs a native Apple library
+operation rather than emitting a shader. Arbitrary pointers, indexing and
+control flow are outside this initial language.
 
 **Observed: source:** [`MetalRuntime`](../src/runtime/metal.rs) owns native Metal
 buffers and compute pipelines, compiles generated MSL, caches pipelines within
 the runtime, and submits ordered batches using `MTLCommandQueue` and
-`MTLCommandBuffer`, not the Metal 4 queue API. [`CorexRuntime`](../src/runtime/corex.rs)
+`MTLCommandBuffer`, not the Metal 4 queue API. It also compiles explicit MPS
+GEMM jobs and interleaves them with shader jobs in the same ordered batch.
+Every job is validated before encoding; MPS matrix wrappers are prepared
+outside the execution timer and held until completion. MPS dispatch counts
+refer to logical GEMM encodes, since its internal kernels are opaque.
+[`CorexRuntime`](../src/runtime/corex.rs)
 uses a versioned native ABI, generated source and a configured vendor compiler.
 It requires an explicit vendor-confirmed architecture; it does not guess a
 TianGai 300 target. Its compilation cache is session-scoped, not a persistent
 cross-driver optimization database. Both paths remain dependent on vendor
 compilers and drivers.
 
+The native Metal expansion uses FP32 SIMD-group matrix operations and
+`simd_sum`, guarded by Apple7-or-newer support and a pipeline execution width
+of 32. The separate forward self-attention kernel computes
+`softmax(QKᵀ / sqrt(D))V` over contiguous `[H,S,D]` tensors, with optional causal
+masking and limits `H ≤ 32`, `S ≤ 2048`, `D ≤ 128`. Its stable online softmax
+avoids global score/probability matrices. This is a small implementation of
+published algorithmic ideas, not the full FlashAttention implementation or
+NVIDIA technology emulation. There is no dropout, backward pass or KV cache.
+See [native implementation and primary sources](METAL_ADVANCES.md).
+
 The [`workload implementation`](../src/runtime/workloads.rs) composes a synthetic
-residual MLP block with **six dispatches**:
+residual MLP block with **six logical operations**:
 
 ```text
 input -> RMSNorm -> gate GEMM --+
@@ -136,18 +155,22 @@ input -------------------------------------------------------^
 ```
 
 Weights are deterministically generated numbers, not a trained checkpoint.
-The example has no attention, KV cache, tokenizer, token generation, backward
+This MLP example has no attention, KV cache, tokenizer, token generation, backward
 pass or optimizer. It compares ordered batched submission with the same six
 operations submitted and synchronized individually. That comparison measures
 submission/completion overhead; it is not a comparison against a tuned vendor
-inference stack or CUDA Graphs.
+inference stack or CUDA Graphs. `--mps-gemm` selects native MPS for its GEMM
+nodes while the other operations remain generated shaders; `--simd-gemm`
+selects the SIMD-group variant. Neither changes the default GEMM silently.
 
 The [`jade-runtime` CLI](../src/bin/jade-runtime.rs) exposes these paths:
 
 ```sh
 cargo run --release --bin jade-runtime -- info
-cargo run --release --bin jade-runtime -- verify --report reports/native-metal-verify.json
-cargo run --release --bin jade-runtime -- mlp --batch 8 --width 128 --hidden 256 --report reports/native-metal-mlp.json
+cargo run --release --bin jade-runtime -- verify --report target/native-metal-verify.json
+cargo run --release --bin jade-runtime -- mlp --batch 8 --width 128 --hidden 256 --report target/native-metal-mlp.json
+cargo run --release --bin jade-runtime -- metal-verify --report target/metal-advances/verify.json
+cargo run --release --bin jade-runtime -- mlp --batch 8 --width 128 --hidden 256 --mps-gemm --report target/metal-advances/mlp-mps.json
 cargo run --release --bin jade-runtime -- emit --spec examples/kernels/fused_axpy_relu.json --target metal --output target/fused_axpy_relu.metal
 cargo run --release --bin jade-runtime -- emit-suite --directory target/generated-kernels
 ```
@@ -160,6 +183,13 @@ commands generate source without executing it. Native CoreX execution selects
 
 ## Execution evidence
 
+The [Metal expansion guide](METAL_ADVANCES.md) documents SIMD-group GEMM,
+native MPS and forward self-attention. Its validation and measurements are
+maintained in the separate [expansion report](../reports/METAL_ADVANCES.md).
+The records below preserve **alpha 1 and earlier history**, including the
+original 19-case suite and synthetic MLP measurements; they are not results
+for the new operators or MPS path.
+
 **Observed: execution:** the existing Rust/wgpu path ran on this Mac's Apple M4
 Pro through Metal. Three WGSL GEMM kernels passed 21 kernel/shape checks covering
 23,244 values against an FP64 CPU oracle. Performance reports compare only this
@@ -171,7 +201,7 @@ FP32 and FP16-input paths. They have not been linked or executed against CoreX.
 The host FP16 conversion checks do not validate device arithmetic. See
 [bridge scope](COREX.md).
 
-**Observed: execution — native Metal:** the new IR-to-MSL path executed directly
+**Observed: execution — alpha 1 native Metal:** the IR-to-MSL path executed directly
 on the Apple M4 Pro. **19 numerical cases passed, covering 6,456 output values**
 against independent FP64 CPU references, and five invalid-call checks were
 rejected. A separate native Metal test exercised ordered operations, ownership
@@ -180,7 +210,7 @@ test passed; Clippy with warnings denied and rustfmt also passed. See
 [native verification report](../reports/native-metal-verify.json) and
 [final native validation record](../reports/NATIVE_RESULTS.md).
 
-**Observed: execution — synthetic MLP:** batch 8, width 128 and hidden width 256
+**Observed: execution — alpha 1 synthetic MLP:** batch 8, width 128 and hidden width 256
 produced 1,024 checked outputs before and after timing; maximum absolute error
 was approximately **2.01e-7**. Across seven alternating rounds of ten block
 repeats, median synchronized host time per block was **0.1940625 ms** with
@@ -209,17 +239,19 @@ substitute for access to the Linux/Iluvatar target.
 
 ## Delivery sequence and acceptance evidence
 
-Increment 1 has the local execution evidence recorded above. The remaining
-increments still require their stated implementation and acceptance evidence.
+The initial native slice has the historical execution evidence above. The
+Metal operator expansion is implemented, with its separate evidence linked
+below. Remaining product milestones require their own target qualification.
 
 | Increment | Concrete engineering work | Required evidence before declaring it delivered |
 | --- | --- | --- |
 | 1. Native vertical slice | Rust operation specification, validators, MSL emitter, native Metal buffers/pipelines, ordered replay; small MLP forward example. | Execute on the Mac, compare all small-shape outputs with independent CPU references, record actual backend and timing scope. |
-| 2. CoreX parity | Same supported operations through a versioned ABI, source emitter and SDK compiler; validate target flags. | Compile and run on TianGai 300 Linux; record board/driver/SDK/precision, unsupported cases and raw results. |
-| 3. Useful AI operators | Optimize the initial operators and add fused bias/activation, attention and selected quantization; choose a specific partner model workload. | Numerical/task-quality gates plus end-to-end gains against that vendor's tuned baseline; account for compilation and transfers separately. |
-| 4. Execution planning | Dependency graph, buffer reuse, persistent cache and correctness-gated per-device tuning. | Repeated-shape and mixed-load tests, cache invalidation across driver/compiler revisions, no hidden quality reduction. |
-| 5. Training and scale | Backward operators, optimizer, deterministic/random behavior, collectives and failure handling. | Gradient checks, training convergence/time-to-quality, multi-GPU correctness and scaling efficiency. |
-| 6. Wider migration surface | A chosen source/API compatibility subset with published exclusions. | Versioned conformance suite and actual applications; no "full CUDA" label from a few working kernels. |
+| 2. Native Metal operators — implemented | FP32 SIMD-group GEMM, native MPS baseline and mixed batches, small causal/noncausal online attention. | Independent numerical checks, ordering/rejection tests and scoped measurements in the [expansion report](../reports/METAL_ADVANCES.md). |
+| 3. CoreX qualification | Shared operations through a versioned ABI, source emitter and SDK compiler; validate target flags. Metal-only operators need their own backend work. | Compile and run on TianGai 300 Linux; record board/driver/SDK/precision, unsupported cases and raw results. |
+| 4. Partner model and advanced operators | Integrate a specific model; evaluate tiled/fused attention, K/V reuse, KV cache and selected quantization. | Numerical/task-quality gates plus end-to-end gains against that vendor's tuned baseline; account for compilation and transfers separately. |
+| 5. Execution planning | Dependency graph, buffer reuse, persistent cache and correctness-gated per-device tuning. | Repeated-shape and mixed-load tests, cache invalidation across driver/compiler revisions, no hidden quality reduction. |
+| 6. Training and scale | Backward operators, optimizer, deterministic/random behavior, collectives and failure handling. | Gradient checks, training convergence/time-to-quality, multi-GPU correctness and scaling efficiency. |
+| 7. Wider migration surface | A chosen source/API compatibility subset with published exclusions. | Versioned conformance suite and actual applications; no "full CUDA" label from a few working kernels. |
 
 The potential product advantage is a reproducible optimization system across
 supported devices: validated transformations, hardware-specific schedules and

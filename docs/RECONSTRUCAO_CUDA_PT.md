@@ -27,10 +27,10 @@ reconstrução da ISA da TianGai 300. O
 | --- | --- | --- |
 | Runtime e memória | Rust controla dispositivo, buffers, validação, transferências e erros. | Não substitui o driver do fabricante ou a memória gerenciada CUDA. |
 | Compilação | Descrição restrita de operações gera código para o compilador de cada backend. | Não traduz qualquer programa `.cu`, PTX ou SASS. |
-| Metal no Mac | Buffers, pipelines e comandos nativos executam os kernels gerados. | Subconjunto validado localmente; isso não comprova compatibilidade CUDA. |
+| Metal no Mac | Kernels gerados, GEMM SIMD-group e MPS nativo, inclusive lotes mistos MPS/shader. | Evidência local no Mac; isso não comprova compatibilidade CUDA. |
 | CoreX na Iluvatar | ABI C versionada liga Rust ao runtime, compilador e bibliotecas nativas. | Sem SDK e hardware, o caminho não pode ser declarado validado. |
 | Filas e dependências | Sequência ordenada de operações com conclusão síncrona na interface inicial. | Repetir uma lista não implementa a API CUDA Graphs nem streams assíncronas. |
-| IA | Começar por operações elementares e MLP; evoluir para atenção e quantização. | Ainda não fornece cuDNN, um servidor de LLM ou treinamento completo. |
+| IA | Operações elementares, MLP sintético e pequena autoatenção forward implementados. | Ainda não fornece TensorRT/cuDNN completos, KV cache, servidor de LLM ou treinamento. |
 | Distribuição | Camada futura de coletivas, topologia e tratamento de falhas. | Não há equivalente validado ao NCCL ou treinamento multi-GPU. |
 | Desempenho | Validar resultados, especializar kernels e registrar medições reproduzíveis. | Rust ou uma chamada a BLAS, isoladamente, não demonstram ganho de GPU. |
 
@@ -47,20 +47,40 @@ upload/download, compilação e execução ordenada. Cada backend possui buffers
 kernels próprios, com checagem de tamanho, propriedade e uso simultâneo proibido
 de entrada/saída. A interface espera o término da execução antes de retornar.
 
-O frontend [`KernelSpec`/`Expr`](../src/runtime/ir.rs) gera MSL e CoreX C++ a
-partir da mesma descrição. Suporta expressões FP32 com entradas, constantes,
+O frontend [`KernelSpec`/`Expr`](../src/runtime/ir.rs) gera MSL e CoreX C++ para
+o subconjunto compartilhado. Suporta expressões FP32 com entradas, constantes,
 soma, multiplicação, máximo, negação e exponencial; também AXPY, GEMM,
 RMSNorm, SwiGLU e softmax. Não é um compilador geral de Rust ou CUDA para GPU.
 
+A expansão específica do Metal acrescenta GEMM com matrizes SIMD-group,
+`GemmMps` via `MPSMatrixMultiplication` e autoatenção forward. CoreX rejeita
+essas variantes explicitamente. As primitivas Metal traduzem o conceito de
+matrizes cooperativas e reduções; não emulam a ABI WMMA, PTX ou Tensor Cores
+da NVIDIA. MPS usa FP32, sem transposição, `alpha=1`, `beta=0` e sem habilitar
+precisão reduzida. O runtime intercala MPS e shaders no mesmo command buffer,
+valida o lote inteiro e prepara os wrappers de matrizes antes do cronômetro.
+As contagens MPS são operações lógicas; seus kernels internos são opacos.
+
+A autoatenção recebe tensores FP32 contíguos `[H,S,D]`, com `1 ≤ H ≤ 32`,
+`1 ≤ S ≤ 2048`, `1 ≤ D ≤ 128` e modo causal opcional. O softmax online evita
+matrizes globais de scores/probabilidades, usando ideias de pesquisas publicadas.
+Não é a implementação completa do FlashAttention; não inclui dropout,
+backward ou KV cache. Contratos, fontes primárias e comandos de reprodução:
+[expansão Metal](METAL_ADVANCES.md).
+
 O exemplo MLP usa seis operações: RMSNorm, duas projeções GEMM, SwiGLU,
 projeção de saída e soma residual. Os pesos são sintéticos. Não há checkpoint
-treinado, geração de tokens, atenção ou treinamento. A comparação entre enviar
+treinado, geração de tokens, atenção dentro desse MLP ou treinamento.
+`--mps-gemm` seleciona lotes mistos MPS/shader; `--simd-gemm` seleciona GEMM
+SIMD-group. Sem essas opções, permanece o GEMM anterior. A comparação entre enviar
 o bloco junto e sincronizar cada operação mede o custo de submissão e espera.
 
 ```sh
 cargo run --release --bin jade-runtime -- info
 cargo run --release --bin jade-runtime -- verify
 cargo run --release --bin jade-runtime -- mlp
+cargo run --release --bin jade-runtime -- metal-verify --report target/metal-advances/verify.json
+cargo run --release --bin jade-runtime -- mlp --mps-gemm --report target/metal-advances/mlp-mps.json
 cargo run --release --bin jade-runtime -- emit-suite --directory target/generated-kernels
 ```
 
@@ -73,7 +93,11 @@ comprova execução na placa chinesa. O Metal usa `MTLCommandQueue` e
 
 ## O que já tem evidência de execução
 
-**Metal nativo executado:** 19 casos passaram na Apple M4 Pro, com **6.456
+A expansão possui um [registro separado](../reports/METAL_ADVANCES.md), ligado
+ao [guia de implementação](METAL_ADVANCES.md). Os números abaixo preservam o
+**histórico do alpha 1** e não são resultados dos novos kernels ou do MPS.
+
+**Metal nativo no alpha 1:** 19 casos passaram na Apple M4 Pro, com **6.456
 valores** conferidos contra referências CPU independentes em FP64 e cinco
 chamadas inválidas rejeitadas. Um teste adicional verificou ordenação,
 propriedade dos recursos e aliasing. Passaram nove testes Cargo comuns e o
@@ -81,7 +105,7 @@ teste GPU executado explicitamente; Clippy sem warnings e rustfmt passaram.
 [Relatório de verificação](../reports/native-metal-verify.json),
 [registro final de validação](../reports/NATIVE_RESULTS.md).
 
-**MLP sintético executado:** lote 8, largura 128 e dimensão interna 256; as 1.024
+**MLP sintético no alpha 1:** lote 8, largura 128 e dimensão interna 256; as 1.024
 saídas passaram antes e depois da medição, com erro absoluto máximo de
 aproximadamente **2,01e-7**. Em sete rodadas alternadas de dez repetições, a
 mediana foi **0,1940625 ms por bloco** enviando operações em lote contra
@@ -110,8 +134,9 @@ plataforma e cache passaram. A ponte e o novo runtime não foram compilados com
 o SDK nem executados em uma Iluvatar; esses testes não validam o backend nativo.
 
 O produto oficial é **TianGai 300 / 天垓300**. Permanecem sem verificação o alias
-BI-V300, a VRAM da placa do usuário, a versão mínima de SDK/driver e o alvo de
-compilação. O guia oficial orienta obter os headers necessários com o engenheiro
+BI-V300, a VRAM de uma configuração-alvo, a versão mínima de SDK/driver e o alvo
+de compilação. Nenhuma placa foi disponibilizada para este trabalho. O guia
+oficial orienta obter os headers necessários com o engenheiro
 de aplicações. O exemplo antigo de SDK 4.3.0 não comprova suporte a essa placa.
 [Produto](https://www.iluvatar.com/productDetails?fullCode=cpjs-yj-xlxl-tg300),
 [instalação do SDK](https://github.com/Deep-Spark/DeepSpark/blob/master/docs/quickstart.md).
@@ -119,15 +144,18 @@ de aplicações. O exemplo antigo de SDK 4.3.0 não comprova suporte a essa plac
 ## Próximas entregas verificáveis
 
 O percurso inicial no Mac está implementado e executado: especificação de
-kernels → MSL → Metal → MLP sintético conferido contra CPU. A expansão depende
-das próximas entregas:
+kernels → MSL → Metal → MLP sintético conferido contra CPU. A expansão implementa
+GEMM SIMD-group, MPS e autoatenção forward, com evidência própria. As próximas
+entregas são:
 
-1. Compilar e executar o mesmo subconjunto no Linux com TianGai 300 e CoreX;
-   registrar versões, erros, precisão e resultados.
+1. Obter acesso a hardware de um parceiro e executar o subconjunto compartilhado
+   no Linux com TianGai 300 e CoreX; registrar versões, erros, precisão e
+   resultados. Operações exclusivas do Metal precisam de implementação CoreX.
 2. Escolher um modelo real com o fabricante e otimizar os operadores que
    consomem mais tempo. Comparar com a melhor pilha nativa disponível no teste.
-3. Expandir planejamento de execução, reutilização de memória e autotuning;
-   depois gradientes, treinamento, coletivas e migração de aplicações.
+3. Avaliar atenção com tiling/fusão e reutilização de K/V, integração de KV cache,
+   planejamento de execução, memória e autotuning; depois gradientes,
+   treinamento, coletivas e migração de aplicações.
 
 Para inferência, medir tokens/s, latência inicial, p95, lote, contexto, precisão,
 qualidade, VRAM e energia. Para treinamento, medir passos/s e tempo até uma

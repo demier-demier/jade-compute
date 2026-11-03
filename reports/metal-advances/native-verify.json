@@ -1,0 +1,452 @@
+{
+  "checks": [
+    {
+      "case": "axpy_1",
+      "check": {
+        "all_finite": true,
+        "elements": 1,
+        "max_abs_error": 2.9802322387695312e-8,
+        "max_relative_error": 3.8762512975266686e-8
+      },
+      "execution": {
+        "dispatches": 2,
+        "gpu_ms": 0.04945833461533766,
+        "host_ms": 3.707166,
+        "repeats": 2
+      },
+      "spec": {
+        "alpha": -0.375,
+        "len": 1,
+        "op": "axpy"
+      }
+    },
+    {
+      "case": "axpy_257",
+      "check": {
+        "all_finite": true,
+        "elements": 257,
+        "max_abs_error": 5.960464477539063e-8,
+        "max_relative_error": 5.944723935640279e-8
+      },
+      "execution": {
+        "dispatches": 2,
+        "gpu_ms": 0.02499999936844688,
+        "host_ms": 0.8835,
+        "repeats": 2
+      },
+      "spec": {
+        "alpha": -0.375,
+        "len": 257,
+        "op": "axpy"
+      }
+    },
+    {
+      "case": "axpy_1025",
+      "check": {
+        "all_finite": true,
+        "elements": 1025,
+        "max_abs_error": 5.960464477539063e-8,
+        "max_relative_error": 5.944723935640279e-8
+      },
+      "execution": {
+        "dispatches": 2,
+        "gpu_ms": 0.022000000171829015,
+        "host_ms": 0.738166,
+        "repeats": 2
+      },
+      "spec": {
+        "alpha": -0.375,
+        "len": 1025,
+        "op": "axpy"
+      }
+    },
+    {
+      "case": "add_257",
+      "check": {
+        "all_finite": true,
+        "elements": 257,
+        "max_abs_error": 1.1920928955078125e-7,
+        "max_relative_error": 5.6849335900270344e-8
+      },
+      "execution": {
+        "dispatches": 2,
+        "gpu_ms": 0.025208333681803197,
+        "host_ms": 0.8913340000000001,
+        "repeats": 2
+      },
+      "spec": {
+        "len": 257,
+        "op": "add"
+      }
+    },
+    {
+      "case": "swiglu_extreme",
+      "check": {
+        "all_finite": true,
+        "elements": 10,
+        "max_abs_error": 0.0000286102294921875,
+        "max_relative_error": 9.363791410810212e-8
+      },
+      "execution": {
+        "dispatches": 2,
+        "gpu_ms": 0.09720833440951537,
+        "host_ms": 0.8660410000000001,
+        "repeats": 2
+      },
+      "spec": {
+        "len": 10,
+        "op": "swi_glu"
+      }
+    },
+    {
+      "case": "rmsnorm_1_1",
+      "check": {
+        "all_finite": true,
+        "elements": 1,
+        "max_abs_error": 6.614863989895525e-9,
+        "max_relative_error": 1.4511264291710868e-8
+      },
+      "execution": {
+        "dispatches": 2,
+        "gpu_ms": 0.038458334529423155,
+        "host_ms": 1.033167,
+        "repeats": 2
+      },
+      "spec": {
+        "cols": 1,
+        "epsilon": 9.999999747378752e-6,
+        "op": "rms_norm",
+        "rows": 1
+      }
+    },
+    {
+      "case": "softmax_1_1",
+      "check": {
+        "all_finite": true,
+        "elements": 1,
+        "max_abs_error": 0.0,
+        "max_relative_error": 0.0
+      },
+      "execution": {
+        "dispatches": 2,
+        "gpu_ms": 0.04679166704590898,
+        "host_ms": 0.415875,
+        "repeats": 2
+      },
+      "spec": {
+        "cols": 1,
+        "op": "softmax",
+        "rows": 1
+      }
+    },
+    {
+      "case": "rmsnorm_3_17",
+      "check": {
+        "all_finite": true,
+        "elements": 51,
+        "max_abs_error": 1.1601638583158547e-7,
+        "max_relative_error": 1.2862290599225225e-7
+      },
+      "execution": {
+        "dispatches": 2,
+        "gpu_ms": 0.04000000080850441,
+        "host_ms": 0.855125,
+        "repeats": 2
+      },
+      "spec": {
+        "cols": 17,
+        "epsilon": 9.999999747378752e-6,
+        "op": "rms_norm",
+        "rows": 3
+      }
+    },
+    {
+      "case": "softmax_3_17",
+      "check": {
+        "all_finite": true,
+        "elements": 51,
+        "max_abs_error": 1.0935039096438004e-8,
+        "max_relative_error": 8.034234628224804e-8
+      },
+      "execution": {
+        "dispatches": 2,
+        "gpu_ms": 0.061875000028521754,
+        "host_ms": 0.42216699999999996,
+        "repeats": 2
+      },
+      "spec": {
+        "cols": 17,
+        "op": "softmax",
+        "rows": 3
+      }
+    },
+    {
+      "case": "rmsnorm_2_257",
+      "check": {
+        "all_finite": true,
+        "elements": 514,
+        "max_abs_error": 1.2746385169570829e-7,
+        "max_relative_error": 1.4081509699513498e-7
+      },
+      "execution": {
+        "dispatches": 2,
+        "gpu_ms": 0.08450000132143032,
+        "host_ms": 0.739833,
+        "repeats": 2
+      },
+      "spec": {
+        "cols": 257,
+        "epsilon": 9.999999747378752e-6,
+        "op": "rms_norm",
+        "rows": 2
+      }
+    },
+    {
+      "case": "softmax_2_257",
+      "check": {
+        "all_finite": true,
+        "elements": 514,
+        "max_abs_error": 1.9069716583608454e-8,
+        "max_relative_error": 1.2429656600506913e-7
+      },
+      "execution": {
+        "dispatches": 2,
+        "gpu_ms": 0.06599999869649764,
+        "host_ms": 0.9072089999999999,
+        "repeats": 2
+      },
+      "spec": {
+        "cols": 257,
+        "op": "softmax",
+        "rows": 2
+      }
+    },
+    {
+      "case": "gemm_1_1_1_tiled_false",
+      "check": {
+        "all_finite": true,
+        "elements": 1,
+        "max_abs_error": 2.91491630832752e-9,
+        "max_relative_error": 1.532244408309004e-8
+      },
+      "execution": {
+        "dispatches": 2,
+        "gpu_ms": 0.02516666609153617,
+        "host_ms": 0.482042,
+        "repeats": 2
+      },
+      "spec": {
+        "k": 1,
+        "m": 1,
+        "n": 1,
+        "op": "gemm",
+        "tiled": false
+      }
+    },
+    {
+      "case": "gemm_1_1_1_tiled_true",
+      "check": {
+        "all_finite": true,
+        "elements": 1,
+        "max_abs_error": 2.91491630832752e-9,
+        "max_relative_error": 1.532244408309004e-8
+      },
+      "execution": {
+        "dispatches": 2,
+        "gpu_ms": 0.09883333405014127,
+        "host_ms": 0.446791,
+        "repeats": 2
+      },
+      "spec": {
+        "k": 1,
+        "m": 1,
+        "n": 1,
+        "op": "gemm",
+        "tiled": true
+      }
+    },
+    {
+      "case": "gemm_31_47_19_tiled_false",
+      "check": {
+        "all_finite": true,
+        "elements": 1457,
+        "max_abs_error": 6.20527174532981e-7,
+        "max_relative_error": 0.00010559508423900944
+      },
+      "execution": {
+        "dispatches": 2,
+        "gpu_ms": 0.09158333341474645,
+        "host_ms": 0.909708,
+        "repeats": 2
+      },
+      "spec": {
+        "k": 19,
+        "m": 31,
+        "n": 47,
+        "op": "gemm",
+        "tiled": false
+      }
+    },
+    {
+      "case": "gemm_31_47_19_tiled_true",
+      "check": {
+        "all_finite": true,
+        "elements": 1457,
+        "max_abs_error": 6.20527174532981e-7,
+        "max_relative_error": 0.00010559508423900944
+      },
+      "execution": {
+        "dispatches": 2,
+        "gpu_ms": 0.2934166677732719,
+        "host_ms": 0.751417,
+        "repeats": 2
+      },
+      "spec": {
+        "k": 19,
+        "m": 31,
+        "n": 47,
+        "op": "gemm",
+        "tiled": true
+      }
+    },
+    {
+      "case": "gemm_8_33_65_tiled_false",
+      "check": {
+        "all_finite": true,
+        "elements": 264,
+        "max_abs_error": 1.4214186734307077e-6,
+        "max_relative_error": 0.00011683197698486372
+      },
+      "execution": {
+        "dispatches": 2,
+        "gpu_ms": 0.2571666682342766,
+        "host_ms": 0.9273330000000001,
+        "repeats": 2
+      },
+      "spec": {
+        "k": 65,
+        "m": 8,
+        "n": 33,
+        "op": "gemm",
+        "tiled": false
+      }
+    },
+    {
+      "case": "gemm_8_33_65_tiled_true",
+      "check": {
+        "all_finite": true,
+        "elements": 264,
+        "max_abs_error": 1.4214186734307077e-6,
+        "max_relative_error": 0.00011683197698486372
+      },
+      "execution": {
+        "dispatches": 2,
+        "gpu_ms": 0.5615416666842066,
+        "host_ms": 1.425416,
+        "repeats": 2
+      },
+      "spec": {
+        "k": 65,
+        "m": 8,
+        "n": 33,
+        "op": "gemm",
+        "tiled": true
+      }
+    },
+    {
+      "case": "custom_fused_axpy_relu",
+      "check": {
+        "all_finite": true,
+        "elements": 257,
+        "max_abs_error": 1.1920928955078125e-7,
+        "max_relative_error": 5.9254726053254234e-8
+      },
+      "execution": {
+        "dispatches": 2,
+        "gpu_ms": 0.02166666672565043,
+        "host_ms": 0.865084,
+        "repeats": 2
+      },
+      "spec": {
+        "expression": {
+          "kind": "maximum",
+          "left": {
+            "kind": "add",
+            "left": {
+              "kind": "multiply",
+              "left": {
+                "binding": 0,
+                "kind": "input"
+              },
+              "right": {
+                "kind": "constant",
+                "value": 2.5
+              }
+            },
+            "right": {
+              "binding": 1,
+              "kind": "input"
+            }
+          },
+          "right": {
+            "kind": "constant",
+            "value": 0.0
+          }
+        },
+        "inputs": 2,
+        "len": 257,
+        "op": "elementwise"
+      }
+    },
+    {
+      "case": "custom_negate_exp",
+      "check": {
+        "all_finite": true,
+        "elements": 73,
+        "max_abs_error": 2.0128480882064537e-7,
+        "max_relative_error": 9.185078057907406e-8
+      },
+      "execution": {
+        "dispatches": 2,
+        "gpu_ms": 0.019083332517766394,
+        "host_ms": 0.842958,
+        "repeats": 2
+      },
+      "spec": {
+        "expression": {
+          "kind": "exp",
+          "value": {
+            "kind": "negate",
+            "value": {
+              "binding": 0,
+              "kind": "input"
+            }
+          }
+        },
+        "inputs": 1,
+        "len": 73,
+        "op": "elementwise"
+      }
+    }
+  ],
+  "host_arch": "aarch64",
+  "host_os": "macos",
+  "passed": true,
+  "rejected_invalid_calls": 5,
+  "runtime": {
+    "backend": "native-metal",
+    "device": "Apple M4 Pro",
+    "execution": "direct MTLBuffer/MTLComputePipelineState and explicit MPS GEMM; ordered synchronous command buffers",
+    "limitations": [
+      "FP32 Jade IR; explicit SIMD-group matrix operations where selected; no NVIDIA Tensor Core/WMMA ABI",
+      "Apple7+ SIMD-group capability gate: true",
+      "Shared storage and thread-confined synchronous API; no asynchronous stream interface",
+      "GPU timings cover the full command buffer, including dependencies between jobs",
+      "Dispatch counts are logical operations; MPS internal GPU kernel counts are opaque",
+      "Metal validation does not establish Chinese-GPU support or performance"
+    ]
+  },
+  "schema_version": 1,
+  "scope": "Native GPU execution against independent FP64 references; not CUDA ABI or full-model conformance",
+  "unix_time": 1793722751
+}

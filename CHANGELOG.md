@@ -1,5 +1,38 @@
 # Changelog
 
+## 0.1.0-alpha.2 — 2026-11-03
+
+Native Metal matrix and attention research preview. The Cargo package remains
+`0.1.0`; this label identifies the repository preview.
+
+### Added
+
+- Checked `GemmSimd` operations with native FP32 SIMD-group matrix fragments,
+  uniform cooperative operations and safe ragged-tile handling.
+- Explicit `GemmMps` library operations, packed-row FP32 MPS baseline and ordered
+  mixed MPS/custom-shader batches with full prevalidation and replay.
+- Causal/noncausal forward self-attention with SIMD reductions and stable online
+  softmax, plus a materialized scalar reference path.
+- Apple7 capability / 32-lane pipeline checks; Metal-only operations fail
+  explicitly for CoreX instead of silently changing backend.
+- `metal-verify`, `metal-gemm`, `metal-attention` and synthetic MLP
+  `--simd-gemm` / `--mps-gemm` choices.
+- Reproduction script, independent FP64 checks, GPU validation tests, raw
+  interleaved timing samples and source/report/binary hashes.
+
+### Measured evidence
+
+- 62 new case/implementation checks covering 509,710 output values; 12 host
+  tests and 3 explicit GPU tests passed on the local Mac.
+- At 1024³, custom SIMD GEMM measured 1.48× faster than the prior Jade kernel;
+  Apple MPS remained faster than the custom kernel in all measured GPU timings.
+- Causal attention (4 heads, 512 positions, dimension 64) measured 1.40× against
+  the project's scalar materialized reference and avoids 8 MiB of algorithm-level
+  score/probability buffers. This is not a FlashAttention/MLX/model benchmark.
+
+See [full measurements and boundaries](reports/METAL_ADVANCES.md). No NVIDIA
+performance, CUDA compatibility, CoreX execution or full-model support is claimed.
+
 ## 0.1.0-alpha.1 — 2026-11-03
 
 Initial research prototype. This repository release label is separate from the
