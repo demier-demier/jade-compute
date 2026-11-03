@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="480" viewBox="0 0 1000 480" role="img" aria-labelledby="title desc">
+<title id="title">Jade runtime architecture and backend status</title><desc id="desc">Rust host code owns buffers, compiles kernels and submits ordered batches. Checked KernelSpec IR lowers to native Apple Metal, executed locally, and Iluvatar CoreX source, prepared but not executed on target hardware.</desc>
+<defs>
+ <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#18323b" stroke-width="0.6" opacity="0.48"/></pattern>
+ <linearGradient id="jade" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#a1f5ce"/><stop offset="1" stop-color="#46cb98"/></linearGradient>
+ <marker id="arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="#8baba9" stroke-width="1.4"/></marker>
+</defs>
+<rect width="1000" height="480" fill="#07141d"/>
+<g font-family="Arial, Helvetica, sans-serif">
+<text x="48" y="51" fill="#edf8f4" font-size="25" font-weight="700" letter-spacing="-0.5">One checked IR. Explicit backends.</text>
+<text x="49" y="79" fill="#94aaa9" font-size="14">Native execution and validation status remain visible.</text>
+<rect x="48" y="146" width="250" height="251" rx="12" fill="#0c2029" stroke="#244048"/>
+<text x="72" y="178" fill="#68eab0" font-size="10" font-weight="700" letter-spacing="1.8">RUST HOST</text>
+<text x="71" y="212" fill="#edf8f4" font-size="25" font-weight="700">Jade runtime</text>
+<path d="M72 234H274" stroke="#244048"/>
+<circle cx="78" cy="265" r="4" fill="#68eab0"/>
+<text x="94" y="270" fill="#d7e8e3" font-size="16">Own device buffers</text>
+<circle cx="78" cy="310" r="4" fill="#68eab0"/>
+<text x="94" y="315" fill="#d7e8e3" font-size="16">Compile kernels</text>
+<circle cx="78" cy="355" r="4" fill="#68eab0"/>
+<text x="94" y="360" fill="#d7e8e3" font-size="16">Submit ordered batches</text>
+<path d="M298 271H347" fill="none" stroke="#8baba9" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="356" y="202" width="203" height="136" rx="12" fill="#10272c" stroke="#3e6863"/>
+<text x="378" y="231" fill="#68eab0" font-size="10" font-weight="700" letter-spacing="1.8">CHECKED IR</text>
+<text x="377" y="268" fill="#edf8f4" font-size="25" font-weight="700">KernelSpec</text>
+<text x="378" y="300" fill="#94aaa9" font-size="12.5">Bounds · bindings · aliases</text>
+<path d="M559 271H594M594 186V355M594 186H631M594 355H631" fill="none" stroke="#8baba9" stroke-width="1.6"/>
+<path d="M622 186H631" fill="none" stroke="#8baba9" stroke-width="1.6" marker-end="url(#arrow)"/>
+<path d="M622 355H631" fill="none" stroke="#8baba9" stroke-width="1.6" marker-end="url(#arrow)"/>
+<circle cx="594" cy="271" r="3" fill="#8baba9"/>
+<rect x="640" y="119" width="312" height="136" rx="12" fill="#0e2927" stroke="#376955"/>
+<text x="663" y="145" fill="#82a99b" font-size="9.5" font-weight="700" letter-spacing="1.5">NATIVE BACKEND</text>
+<rect x="839" y="132" width="92" height="22" rx="4" fill="#214938"/>
+<text x="850" y="147" fill="#68eab0" font-size="9.5" font-weight="700" letter-spacing="0.7">EXECUTED</text>
+<text x="662" y="183" fill="#edf8f4" font-size="25" font-weight="700">Apple Metal</text>
+<text x="663" y="212" fill="#bdd8cb" font-size="14">MSL · native command buffers</text>
+<text x="663" y="236" fill="#82a99b" font-size="12.5">Validated locally on Apple M4 Pro</text>
+<rect x="640" y="285" width="312" height="136" rx="12" fill="#27251f" stroke="#6c5836"/>
+<text x="663" y="311" fill="#b1a188" font-size="9.5" font-weight="700" letter-spacing="1.5">RESEARCH BACKEND</text>
+<rect x="798" y="298" width="133" height="22" rx="4" fill="#413721"/>
+<text x="809" y="313" fill="#e9bc70" font-size="9" font-weight="700" letter-spacing="0.5">SOURCE PREPARED</text>
+<text x="662" y="349" fill="#edf8f4" font-size="25" font-weight="700">Iluvatar CoreX</text>
+<text x="663" y="378" fill="#d7c7ac" font-size="14">CoreX C++ · vendor compiler</text>
+<text x="663" y="402" fill="#b1a188" font-size="12.5">SDK build &amp; GPU execution pending</text>
+<text x="49" y="456" fill="#799494" font-size="12.5">Status as delivered · Metal results do not establish CoreX support.</text>
+</g></svg>

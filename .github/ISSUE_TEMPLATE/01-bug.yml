@@ -1,0 +1,49 @@
+name: Bug report
+description: Report a reproducible runtime, compiler, validation, or tooling defect.
+title: '[Bug] '
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Include a small reproduction. For suspected security vulnerabilities, use the private reporting link in SECURITY.md.
+        Remove credentials, personal data, and confidential SDK material from all attachments.
+  - type: input
+    id: revision
+    attributes:
+      label: Revision
+      description: Commit SHA or release tag, plus any local changes.
+    validations:
+      required: true
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - Native Metal runtime
+        - Native CoreX runtime or generated kernels
+        - Portable wgpu GEMM
+        - CoreX BLAS bridge
+        - Host tooling or documentation
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, CPU architecture, Rust version, GPU model, driver, and SDK/compiler versions where applicable. Say which hardware is actually available.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction and expected behavior
+      description: Exact commands, minimal input or kernel specification, and what you expected.
+    validations:
+      required: true
+  - type: textarea
+    id: observed
+    attributes:
+      label: Observed behavior and evidence
+      description: Error text or a sanitized report. Distinguish source generation, compilation, and device execution.
+    validations:
+      required: true

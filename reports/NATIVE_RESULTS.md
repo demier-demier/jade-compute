@@ -45,10 +45,28 @@ GPU times as well as host times. The ratio is not a CUDA, MPS, vendor BLAS,
 full-model, Chinese-hardware, or cross-device comparison. The initial run's
 7.813× ratio is retained separately; measurements vary between runs.
 
+### Publication reproduction
+
+Re-running the README commands on the same Mac before the public preview again
+passed 19 numerical cases and the MLP's 1,024-output initial/final checks. The
+MLP maximum absolute error remained 2.00790038e-07. No source or binary changed.
+
+| Recorded run | Batched median, ms/block | Per-dispatch sync median, ms/block | Ratio |
+| --- | ---: | ---: | ---: |
+| Initial | 0.1109166 | 0.866625 | 7.813× |
+| Figure source | 0.1940625 | 1.1256333 | 5.800× |
+| Publication reproduction | 0.2094125 | 0.9312000 | 4.447× |
+
+This variation is retained rather than presenting the best ratio as a stable
+expectation. All runs use the same synthetic workload; they are not independent
+hardware validations. The reproduction's report has its own hash manifest.
+
 ## Files and reproducibility
 
 - [All operator checks](native-metal-verify.json)
-- [Final MLP measurements](native-metal-mlp.json)
+- [MLP measurements used in the figure](native-metal-mlp.json)
+- [Publication reproduction](native-metal-mlp-reproduction.json)
+- [Reproduction provenance](publication-reproduction-manifest.json)
 - [Irregular MLP measurements](native-metal-mlp-ragged.json)
 - [Initial MLP measurements](native-metal-mlp-initial.json)
 - [Generated kernel inventory](generated-native/manifest.json)

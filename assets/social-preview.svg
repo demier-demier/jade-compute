@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title desc">
+<title id="title">Jade Compute — GPU compute, made inspectable.</title><desc id="desc">Public research prototype. Rust runtime, native Metal, and CoreX research. Original geometric Jade monogram.</desc>
+<defs>
+ <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#18323b" stroke-width="0.6" opacity="0.48"/></pattern>
+ <linearGradient id="jade" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#a1f5ce"/><stop offset="1" stop-color="#46cb98"/></linearGradient>
+ <marker id="arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="#8baba9" stroke-width="1.4"/></marker>
+</defs>
+<rect width="1280" height="640" fill="#07141d"/>
+<g font-family="Arial, Helvetica, sans-serif">
+<rect x="862" width="418" height="640" fill="url(#grid)"/>
+<path d="M862 0V640" stroke="#16313a"/>
+<g transform="translate(0 80)">
+ <path d="M72 66H98" stroke="#68eab0" stroke-width="3"/>
+ <text x="111" y="71" fill="#94aaa9" font-size="12" letter-spacing="2.6">INDEPENDENT COMPUTE RESEARCH</text>
+ <text x="70" y="187" fill="#edf8f4" font-size="66" font-weight="700" letter-spacing="-1.7">JADE COMPUTE</text>
+ <text x="73" y="246" fill="#edf8f4" font-size="29" letter-spacing="-0.5">GPU compute, made inspectable.</text>
+ <text x="74" y="292" fill="#94aaa9" font-size="18">Rust runtime · Native Metal · CoreX research</text>
+ <rect x="74" y="337" width="249" height="30" rx="5" fill="#112b2c" stroke="#275248"/>
+ <circle cx="90" cy="352" r="3" fill="#68eab0"/>
+ <text x="103" y="356" fill="#b9d8ce" font-size="10.5" font-weight="700" letter-spacing="1.35">PUBLIC RESEARCH PROTOTYPE</text>
+ <path d="M74 422H808" stroke="#244048"/>
+ <text x="74" y="445" fill="#6e9295" font-size="11" letter-spacing="1.6">SOURCE · EXECUTION · EVIDENCE</text>
+ <g transform="translate(0 0)">
+  <path d="M967 137H1132V278L1060 350H978L926 298V243H974V277L998 301H1039L1084 256V185H967Z" fill="#143a39" transform="translate(12 12)"/>
+  <path d="M967 137H1132V278L1060 350H978L926 298V243H974V277L998 301H1039L1084 256V185H967Z" fill="url(#jade)"/>
+  <path d="M967 137H1132V278L1060 350" fill="none" stroke="#d4ffe9" stroke-width="1.2" opacity="0.7"/>
+  <path d="M919 111H940M929.5 100.5V121.5M1153 377H1174M1163.5 366.5V387.5" stroke="#4a786f" stroke-width="1"/>
+  <circle cx="1164" cy="112" r="3" fill="#31584f"/>
+  <text x="1025" y="412" fill="#628e86" font-size="10" letter-spacing="3.8">JADE / 01</text>
+ </g>
+</g></g></svg>

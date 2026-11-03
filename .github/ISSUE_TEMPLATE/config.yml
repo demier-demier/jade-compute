@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Commercial inquiries
+    url: https://www.linkedin.com/in/bernardo-demier-3176001ab/
+    about: Contact Bernardo Demier about evaluations, licensing, and partnerships.
+  - name: Private security report
+    url: https://github.com/demier-demier/jade-compute/security/advisories/new
+    about: Report suspected vulnerabilities privately; do not post exploit details in a public issue.

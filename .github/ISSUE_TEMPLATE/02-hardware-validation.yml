@@ -1,0 +1,48 @@
+name: Hardware validation
+description: Share reproducible results from an identified device and software stack.
+title: '[Hardware] '
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A generated source file or successful build does not establish GPU support. Report the stage actually reached and include failures.
+        Share only sanitized results and material you are permitted to disclose; proprietary SDK bundles are not needed.
+  - type: input
+    id: revision
+    attributes:
+      label: Jade revision
+      description: Commit SHA or release tag and any modifications.
+    validations:
+      required: true
+  - type: textarea
+    id: platform
+    attributes:
+      label: Exact hardware and software
+      description: Manufacturer, product/SKU, device count, OS, driver, SDK, compiler version, and explicit compiler architecture target. Do not infer a target from a marketing name.
+    validations:
+      required: true
+  - type: dropdown
+    id: stage
+    attributes:
+      label: Furthest completed stage
+      options:
+        - Source emitted only
+        - SDK compilation completed; no device execution
+        - Device execution attempted; validation failed
+        - Device execution and numerical validation passed
+    validations:
+      required: true
+  - type: textarea
+    id: procedure
+    attributes:
+      label: Reproduction
+      description: Commands, compiler flags, kernel/workload specifications, precision, and timing boundaries.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Results and limitations
+      description: Attach sanitized raw JSON or excerpts, checked element counts, numerical errors, failures, and unsupported cases. State whether GPU timestamps were valid.
+    validations:
+      required: true

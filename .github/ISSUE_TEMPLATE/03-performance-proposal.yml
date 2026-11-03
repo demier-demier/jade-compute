@@ -1,0 +1,48 @@
+name: Performance proposal
+description: Propose a focused optimization with an explicit baseline and acceptance criteria.
+title: '[Performance] '
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Start with a workload and a measurable bottleneck. Unmeasured ideas are welcome when clearly identified as hypotheses.
+        A win against Jade's naive kernel or per-dispatch synchronization is not a CUDA, vendor-library, or full-model comparison.
+  - type: dropdown
+    id: evidence_status
+    attributes:
+      label: Evidence status
+      options:
+        - Hypothesis; not measured yet
+        - Profiled bottleneck
+        - Measured operator improvement
+        - Measured application improvement
+    validations:
+      required: true
+  - type: textarea
+    id: workload
+    attributes:
+      label: Workload and target
+      description: Operation/model, shapes, precision, device and SDK versions, and the available hardware access.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change and baseline
+      description: Explain the bottleneck, proposed mechanism, and strongest applicable reference implementation. Include its revision/configuration.
+    validations:
+      required: true
+  - type: textarea
+    id: measurement
+    attributes:
+      label: Measurement or validation plan
+      description: Raw samples if available; warmup, timing boundaries, independent correctness checks, quality budget, and held-out workloads. Write 'not measured' where appropriate.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Success criteria and limitations
+      description: Define latency/throughput or memory targets and tolerated regressions. Separate an operator result from expected application impact.
+    validations:
+      required: true

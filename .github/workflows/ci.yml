@@ -1,0 +1,58 @@
+name: Host checks
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: host-checks-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Rust and CPU checks (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    env:
+      CARGO_TERM_COLOR: always
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out source
+        # actions/checkout v7.0.1, verified against the official tag on 2026-11-03.
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install the pinned Rust toolchain
+        run: rustup toolchain install 1.90.0 --profile minimal --component rustfmt --component clippy
+      - name: Record toolchain
+        run: |
+          rustc --version
+          cargo --version
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+      - name: Lint all targets
+        run: cargo clippy --all-targets --locked -- -D warnings
+      - name: Run host tests
+        # GPU tests are ignored by default. This does not validate Metal or CoreX execution.
+        run: cargo test --all-targets --locked
+      - name: Validate FP16 conversion on the CPU
+        run: |
+          c++ -std=c++17 -O2 native/fp16_test.cpp -o target/fp16-test
+          ./target/fp16-test
+      - name: Check shell syntax
+        run: |
+          for script in scripts/*.sh; do
+            bash -n "$script"
+          done

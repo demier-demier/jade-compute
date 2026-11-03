@@ -1,0 +1,10 @@
+{
+  "purpose": "README command reproduction before public research preview publication",
+  "measured_code_commit": "07d3bcedf64354f579d145565db8320e3829c5e6",
+  "source_provenance": "reports/native-manifest.json",
+  "verification": "All 28 source hashes, 3 original report hashes and the native binary hash matched the existing native manifest at reproduction.",
+  "report": "reports/native-metal-mlp-reproduction.json",
+  "report_sha256": "fbd99760942a8d65bd36931355334733c9610f119cfdd7f795ea12f17e0998da",
+  "command": "./target/release/jade-runtime mlp --report target/demo/mlp.json",
+  "scope": "Same host, synthetic workload and kernels; not independent hardware validation."
+}

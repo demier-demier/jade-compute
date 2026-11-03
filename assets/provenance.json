@@ -1,0 +1,37 @@
+{
+  "source": "reports/native-metal-mlp.json",
+  "source_sha256": "6ee1d479000b4d92a9d671aa080591e060e2278028d324523b27ffa9a43c22bc",
+  "source_unix_time": 1793719610,
+  "calculation": "Each plotted value is raw sample host_ms divided by its repeats; seven values per mode.",
+  "median_ordered_batch_ms": 0.1940625,
+  "median_per_dispatch_sync_ms": 1.1256333,
+  "scope": "Same native kernels and resident tensors; one ordered batch versus synchronizing every dispatch. Excludes compilation, allocation, upload and readback. Not a CUDA/vendor-BLAS/full-model comparison.",
+  "device": "Apple M4 Pro",
+  "benchmark_reexecuted": false,
+  "embedded_font": {
+    "family": "DejaVu Sans",
+    "notice": "assets/THIRD_PARTY_NOTICES.md",
+    "license_source": "matplotlib/mpl-data/fonts/ttf/LICENSE_DEJAVU",
+    "license_source_sha256": "d75938dec098f06f0ac3c00853065d94f020be1c3c62ef1dc2975ba15b4d9b0e"
+  },
+  "vector_preview_renderer": "rsvg-convert",
+  "generator": "scripts/render-presentation.py",
+  "assets": {
+    "hero": {
+      "width": 1280,
+      "height": 480
+    },
+    "social-preview": {
+      "width": 1280,
+      "height": 640
+    },
+    "architecture": {
+      "width": 1000,
+      "height": 480
+    },
+    "benchmark-submission": {
+      "width": 1280,
+      "height": 760
+    }
+  }
+}
