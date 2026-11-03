@@ -3,6 +3,10 @@ pub mod corex;
 pub mod ir;
 #[cfg(target_os = "macos")]
 pub mod metal;
+pub mod metal_attention;
+#[cfg(target_os = "macos")]
+pub mod metal_lab;
+pub mod metal_simd;
 pub mod workloads;
 
 use anyhow::Result;
@@ -20,6 +24,7 @@ pub struct RuntimeInfo {
 pub struct Execution {
     pub host_ms: f64,
     pub gpu_ms: Option<f64>,
+    /// Logical operation encodes; a vendor library may dispatch multiple GPU kernels internally.
     pub dispatches: u64,
     pub repeats: u32,
 }

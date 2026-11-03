@@ -1,0 +1,7 @@
+{
+  "op": "attention_online",
+  "heads": 4,
+  "seq": 256,
+  "dim": 64,
+  "causal": true
+}

@@ -24,6 +24,36 @@ pub enum KernelSpec {
         k: u32,
         tiled: bool,
     },
+    /// Native Metal SIMD-group matrix multiply, FP32 throughout.
+    GemmSimd {
+        m: u32,
+        n: u32,
+        k: u32,
+    },
+    /// Native Apple MPS library operation; emits no standalone device source.
+    GemmMps {
+        m: u32,
+        n: u32,
+        k: u32,
+    },
+    /// Native Metal self-attention stages. Tensor layout is [heads, seq, dim].
+    AttentionScores {
+        heads: u32,
+        seq: u32,
+        dim: u32,
+        causal: bool,
+    },
+    AttentionApply {
+        heads: u32,
+        seq: u32,
+        dim: u32,
+    },
+    AttentionOnline {
+        heads: u32,
+        seq: u32,
+        dim: u32,
+        causal: bool,
+    },
     RmsNorm {
         rows: u32,
         cols: u32,
@@ -127,6 +157,22 @@ enum Dialect {
 }
 
 impl KernelSpec {
+    pub fn requires_simdgroup_matrix(&self) -> bool {
+        matches!(self, Self::GemmSimd { .. })
+    }
+    pub fn requires_simdgroup_ops(&self) -> bool {
+        matches!(self, Self::AttentionOnline { .. })
+    }
+    pub fn is_metal_specific(&self) -> bool {
+        matches!(
+            self,
+            Self::GemmSimd { .. }
+                | Self::GemmMps { .. }
+                | Self::AttentionScores { .. }
+                | Self::AttentionApply { .. }
+                | Self::AttentionOnline { .. }
+        )
+    }
     pub fn name(&self) -> &'static str {
         match self {
             Self::Elementwise { .. } => "elementwise",
@@ -134,6 +180,11 @@ impl KernelSpec {
             Self::Add { .. } => "add",
             Self::Gemm { tiled: true, .. } => "gemm_register32",
             Self::Gemm { tiled: false, .. } => "gemm_naive",
+            Self::GemmSimd { .. } => "gemm_simdgroup_fp32",
+            Self::GemmMps { .. } => "gemm_mps_fp32",
+            Self::AttentionScores { .. } => "attention_scores",
+            Self::AttentionApply { .. } => "attention_apply",
+            Self::AttentionOnline { .. } => "attention_online",
             Self::RmsNorm { .. } => "rms_norm",
             Self::SwiGlu { .. } => "swi_glu",
             Self::Softmax { .. } => "softmax",
@@ -176,10 +227,29 @@ impl KernelSpec {
                 ensure!(alpha.is_finite(), "alpha must be finite");
             }
             Self::Add { len } | Self::SwiGlu { len } => dim(len)?,
-            Self::Gemm { m, n, k, .. } => {
+            Self::Gemm { m, n, k, .. } | Self::GemmSimd { m, n, k } | Self::GemmMps { m, n, k } => {
                 matrix(m, k)?;
                 matrix(k, n)?;
                 matrix(m, n)?;
+            }
+            Self::AttentionScores {
+                heads, seq, dim, ..
+            }
+            | Self::AttentionApply { heads, seq, dim }
+            | Self::AttentionOnline {
+                heads, seq, dim, ..
+            } => {
+                ensure!((1..=32).contains(&heads), "attention heads must be 1..=32");
+                ensure!(
+                    (1..=2048).contains(&seq),
+                    "attention sequence must be 1..=2048"
+                );
+                ensure!(
+                    (1..=128).contains(&dim),
+                    "attention head dimension must be 1..=128"
+                );
+                matrix(heads * seq, dim)?;
+                matrix(heads * seq, seq)?;
             }
             Self::RmsNorm {
                 rows,
@@ -225,10 +295,36 @@ impl KernelSpec {
                 b("up", len as usize, false),
                 b("out", len as usize, true),
             ],
-            Self::Gemm { m, n, k, .. } => vec![
-                b("a", m as usize * k as usize, false),
-                b("b", k as usize * n as usize, false),
-                b("out", m as usize * n as usize, true),
+            Self::Gemm { m, n, k, .. } | Self::GemmSimd { m, n, k } | Self::GemmMps { m, n, k } => {
+                vec![
+                    b("a", m as usize * k as usize, false),
+                    b("b", k as usize * n as usize, false),
+                    b("out", m as usize * n as usize, true),
+                ]
+            }
+            Self::AttentionScores {
+                heads, seq, dim, ..
+            } => vec![
+                b("q", heads as usize * seq as usize * dim as usize, false),
+                b("k", heads as usize * seq as usize * dim as usize, false),
+                b("scores", heads as usize * seq as usize * seq as usize, true),
+            ],
+            Self::AttentionApply { heads, seq, dim } => vec![
+                b(
+                    "probabilities",
+                    heads as usize * seq as usize * seq as usize,
+                    false,
+                ),
+                b("v", heads as usize * seq as usize * dim as usize, false),
+                b("out", heads as usize * seq as usize * dim as usize, true),
+            ],
+            Self::AttentionOnline {
+                heads, seq, dim, ..
+            } => vec![
+                b("q", heads as usize * seq as usize * dim as usize, false),
+                b("k", heads as usize * seq as usize * dim as usize, false),
+                b("v", heads as usize * seq as usize * dim as usize, false),
+                b("out", heads as usize * seq as usize * dim as usize, true),
             ],
             Self::RmsNorm { rows, cols, .. } => vec![
                 b("x", rows as usize * cols as usize, false),
@@ -272,6 +368,35 @@ impl KernelSpec {
     pub fn launch(&self) -> Result<Launch> {
         self.validate()?;
         Ok(match *self {
+            Self::GemmMps { .. } => {
+                anyhow::bail!("MPS library operations own their launch geometry")
+            }
+            Self::GemmSimd { m, n, k } => {
+                let (grid, block) = super::metal_simd::launch(m, n, k);
+                Launch { grid, block }
+            }
+            Self::AttentionOnline {
+                heads,
+                seq,
+                dim,
+                causal,
+            } => {
+                let (grid, block) = super::metal_attention::online_launch(heads, seq, dim, causal);
+                Launch { grid, block }
+            }
+            Self::AttentionScores {
+                heads,
+                seq,
+                dim,
+                causal,
+            } => {
+                let (grid, block) = super::metal_attention::scores_launch(heads, seq, dim, causal);
+                Launch { grid, block }
+            }
+            Self::AttentionApply { heads, seq, dim } => {
+                let (grid, block) = super::metal_attention::apply_launch(heads, seq, dim);
+                Launch { grid, block }
+            }
             Self::Elementwise { len, .. } => Launch {
                 grid: [len.div_ceil(256), 1, 1],
                 block: [256, 1, 1],
@@ -294,9 +419,40 @@ impl KernelSpec {
         })
     }
     pub fn metal_source(&self) -> Result<String> {
-        self.source(Dialect::Metal)
+        self.validate()?;
+        match *self {
+            Self::GemmMps { .. } => {
+                anyhow::bail!("MPS GEMM is a library operation, not generated MSL source")
+            }
+            Self::GemmSimd { m, n, k } => Ok(super::metal_simd::source(m, n, k)),
+            Self::AttentionOnline {
+                heads,
+                seq,
+                dim,
+                causal,
+            } => Ok(super::metal_attention::online_source(
+                heads, seq, dim, causal,
+            )),
+            Self::AttentionScores {
+                heads,
+                seq,
+                dim,
+                causal,
+            } => Ok(super::metal_attention::scores_source(
+                heads, seq, dim, causal,
+            )),
+            Self::AttentionApply { heads, seq, dim } => {
+                Ok(super::metal_attention::apply_source(heads, seq, dim))
+            }
+            _ => self.source(Dialect::Metal),
+        }
     }
     pub fn corex_source(&self) -> Result<String> {
+        ensure!(
+            !self.is_metal_specific(),
+            "{} is a Metal-only operation; CoreX lowering is not implemented",
+            self.name()
+        );
         self.source(Dialect::Corex)
     }
     fn source(&self, dialect: Dialect) -> Result<String> {
@@ -324,6 +480,7 @@ impl KernelSpec {
             arguments.push_str(", uint3 gid [[thread_position_in_grid]], uint3 tid [[thread_position_in_threadgroup]], uint3 group [[threadgroup_position_in_grid]]");
         }
         let body = match self {
+            Self::GemmMps { .. } | Self::GemmSimd { .. } | Self::AttentionScores { .. } | Self::AttentionApply { .. } | Self::AttentionOnline { .. } => unreachable!("Metal-specific operations use their own checked source emitters"),
             Self::Elementwise {len,expression,..} => format!("    const unsigned i=gid.x;\n    if(i<{len}u) out[i]={};\n",expression.code(dialect)),
             Self::Axpy {len,alpha} => format!("    const unsigned i=gid.x;\n    if(i<{len}u) out[i]={fused}({alpha:e}f,a[i],b[i]);\n"),
             Self::Add {len} => format!("    const unsigned i=gid.x;\n    if(i<{len}u) out[i]=a[i]+b[i];\n"),
@@ -421,6 +578,77 @@ impl KernelSpec {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn metal_specific_operations_fail_closed_on_other_targets_and_invalid_shapes() {
+        let specs = [
+            KernelSpec::GemmSimd {
+                m: 33,
+                n: 17,
+                k: 65,
+            },
+            KernelSpec::AttentionOnline {
+                heads: 2,
+                seq: 33,
+                dim: 17,
+                causal: true,
+            },
+            KernelSpec::AttentionScores {
+                heads: 2,
+                seq: 33,
+                dim: 17,
+                causal: true,
+            },
+            KernelSpec::AttentionApply {
+                heads: 2,
+                seq: 33,
+                dim: 17,
+            },
+        ];
+        for spec in specs {
+            assert!(spec.corex_source().is_err());
+            assert!(spec
+                .metal_source()
+                .unwrap()
+                .contains("kernel void jade_main"));
+            let restored: KernelSpec =
+                serde_json::from_str(&serde_json::to_string(&spec).unwrap()).unwrap();
+            assert_eq!(
+                restored.metal_source().unwrap(),
+                spec.metal_source().unwrap()
+            );
+            let bindings = spec.bindings().unwrap();
+            let lengths: Vec<_> = bindings.iter().map(|b| b.elements).collect();
+            let mut ids: Vec<_> = (0..bindings.len() as u64).collect();
+            assert!(spec.validate_bindings(&lengths, &ids).is_ok());
+            *ids.last_mut().unwrap() = 0;
+            assert!(spec.validate_bindings(&lengths, &ids).is_err());
+        }
+        for (heads, seq, dim) in [
+            (0, 1, 1),
+            (33, 1, 1),
+            (1, 0, 1),
+            (1, 2049, 1),
+            (1, 1, 0),
+            (1, 1, 129),
+            (u32::MAX, u32::MAX, u32::MAX),
+        ] {
+            assert!(KernelSpec::AttentionOnline {
+                heads,
+                seq,
+                dim,
+                causal: false
+            }
+            .metal_source()
+            .is_err());
+        }
+        assert!(KernelSpec::GemmSimd {
+            m: u32::MAX,
+            n: u32::MAX,
+            k: u32::MAX
+        }
+        .metal_source()
+        .is_err());
+    }
     #[test]
     fn expression_frontend_rejects_unbound_loads_and_excessive_depth() {
         let invalid = KernelSpec::Elementwise {

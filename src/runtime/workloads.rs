@@ -333,6 +333,14 @@ fn mlp_elements(batch: u32, width: u32, hidden: u32) -> Result<u64> {
         .context("MLP tensor size calculation overflow")
 }
 
+#[derive(Clone, Copy, Debug, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum GemmMode {
+    Register,
+    Simd,
+    Mps,
+}
+
 /// A synthetic six-operation LLM-style residual MLP block. Weights are fixed
 /// generated numbers, not a trained checkpoint; there is no token generation.
 pub fn mlp<R: Runtime>(
@@ -342,6 +350,27 @@ pub fn mlp<R: Runtime>(
     hidden: u32,
     repeats: u32,
     samples: u32,
+) -> Result<Value> {
+    mlp_with_gemm(
+        runtime,
+        batch,
+        width,
+        hidden,
+        repeats,
+        samples,
+        GemmMode::Register,
+    )
+}
+
+/// Select an explicit GEMM implementation while preserving the six-op workload.
+pub fn mlp_with_gemm<R: Runtime>(
+    runtime: &R,
+    batch: u32,
+    width: u32,
+    hidden: u32,
+    repeats: u32,
+    samples: u32,
+    gemm_mode: GemmMode,
 ) -> Result<Value> {
     ensure!(
         batch > 0
@@ -380,33 +409,28 @@ pub fn mlp<R: Runtime>(
     let projected = runtime.alloc(m * w)?;
     let output = runtime.alloc(m * w)?;
     let eps = 1e-5_f32;
+    let gemm_spec = |m, n, k| match gemm_mode {
+        GemmMode::Register => KernelSpec::Gemm {
+            m,
+            n,
+            k,
+            tiled: true,
+        },
+        GemmMode::Simd => KernelSpec::GemmSimd { m, n, k },
+        GemmMode::Mps => KernelSpec::GemmMps { m, n, k },
+    };
     let specs = [
         KernelSpec::RmsNorm {
             rows: batch,
             cols: width,
             epsilon: eps,
         },
-        KernelSpec::Gemm {
-            m: batch,
-            n: hidden,
-            k: width,
-            tiled: true,
-        },
-        KernelSpec::Gemm {
-            m: batch,
-            n: hidden,
-            k: width,
-            tiled: true,
-        },
+        gemm_spec(batch, hidden, width),
+        gemm_spec(batch, hidden, width),
         KernelSpec::SwiGlu {
             len: batch * hidden,
         },
-        KernelSpec::Gemm {
-            m: batch,
-            n: width,
-            k: hidden,
-            tiled: true,
-        },
+        gemm_spec(batch, width, hidden),
         KernelSpec::Add { len: batch * width },
     ];
     let kernels = specs
@@ -496,7 +520,7 @@ pub fn mlp<R: Runtime>(
     let batch_ms = median(&batched);
     let separate_ms = median(&separately);
     Ok(
-        json!({"runtime":runtime.info(),"workload":"synthetic residual MLP: RMSNorm -> gate/up GEMM -> SwiGLU -> down GEMM -> residual add","trained_model":false,"shape":{"batch":batch,"width":width,"hidden":hidden},"specs":specs,"initial_check":initial,"final_check":final_check,"batched_samples":batched,"separate_submission_samples":separately,"median_batched_host_ms_per_block":batch_ms,"median_separate_host_ms_per_block":separate_ms,"ratio_separate_to_batched":separate_ms/batch_ms,"scope":"Same native kernels and resident tensors; one ordered batch versus synchronizing every dispatch. Excludes compilation, allocation, upload and readback. Not a CUDA/vendor-BLAS/full-model comparison.","output_elements":output.len()}),
+        json!({"runtime":runtime.info(),"workload":"synthetic residual MLP: RMSNorm -> gate/up GEMM -> SwiGLU -> down GEMM -> residual add","trained_model":false,"gemm_mode":gemm_mode,"shape":{"batch":batch,"width":width,"hidden":hidden},"specs":specs,"initial_check":initial,"final_check":final_check,"batched_samples":batched,"separate_submission_samples":separately,"median_batched_host_ms_per_block":batch_ms,"median_separate_host_ms_per_block":separate_ms,"ratio_separate_to_batched":separate_ms/batch_ms,"scope":"Same logical operations and resident tensors; one ordered batch versus synchronizing every dispatch. Excludes compilation, allocation, upload and readback. Not a CUDA/vendor-BLAS/full-model comparison.","output_elements":output.len()}),
     )
 }
 

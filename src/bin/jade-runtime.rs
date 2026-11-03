@@ -41,11 +41,54 @@ enum Target {
 #[derive(Subcommand)]
 enum Command {
     Info,
+    /// Validate native SIMD-group GEMM, Apple MPS and online self-attention.
+    MetalVerify {
+        #[arg(long)]
+        report: Option<PathBuf>,
+    },
+    /// Interleave FP32 GEMM measurements against Jade's prior kernel and Apple MPS.
+    MetalGemm {
+        #[arg(long, default_value_t = 512)]
+        m: u32,
+        #[arg(long, default_value_t = 512)]
+        n: u32,
+        #[arg(long, default_value_t = 512)]
+        k: u32,
+        #[arg(long, default_value_t = 10)]
+        repeats: u32,
+        #[arg(long, default_value_t = 9)]
+        samples: u32,
+        #[arg(long)]
+        report: Option<PathBuf>,
+    },
+    /// Compare fused online self-attention with a materialized reference on Metal.
+    MetalAttention {
+        #[arg(long, default_value_t = 4)]
+        heads: u32,
+        #[arg(long, default_value_t = 256)]
+        sequence: u32,
+        #[arg(long, default_value_t = 64)]
+        head_dim: u32,
+        #[arg(long)]
+        causal: bool,
+        #[arg(long, default_value_t = 10)]
+        repeats: u32,
+        #[arg(long, default_value_t = 9)]
+        samples: u32,
+        #[arg(long)]
+        report: Option<PathBuf>,
+    },
     Verify {
         #[arg(long)]
         report: Option<PathBuf>,
     },
     Mlp {
+        /// Use native Metal SIMD-group FP32 GEMM in the synthetic MLP.
+        #[arg(long, conflicts_with = "mps_gemm")]
+        simd_gemm: bool,
+        /// Mix native Apple MPS GEMM with Jade kernels in the same ordered batch.
+        #[arg(long)]
+        mps_gemm: bool,
         #[arg(long, default_value_t = 8)]
         batch: u32,
         #[arg(long, default_value_t = 128)]
@@ -101,6 +144,8 @@ fn run<R: Runtime>(runtime: &R, command: &Command) -> Result<()> {
         Command::Info => emit_report(json!({"runtime":runtime.info()}), None),
         Command::Verify { report } => emit_report(workloads::verify(runtime)?, report.as_ref()),
         Command::Mlp {
+            simd_gemm,
+            mps_gemm,
             batch,
             width,
             hidden,
@@ -108,7 +153,21 @@ fn run<R: Runtime>(runtime: &R, command: &Command) -> Result<()> {
             samples,
             report,
         } => emit_report(
-            workloads::mlp(runtime, *batch, *width, *hidden, *repeats, *samples)?,
+            workloads::mlp_with_gemm(
+                runtime,
+                *batch,
+                *width,
+                *hidden,
+                *repeats,
+                *samples,
+                if *mps_gemm {
+                    workloads::GemmMode::Mps
+                } else if *simd_gemm {
+                    workloads::GemmMode::Simd
+                } else {
+                    workloads::GemmMode::Register
+                },
+            )?,
             report.as_ref(),
         ),
         _ => unreachable!(),
@@ -116,6 +175,27 @@ fn run<R: Runtime>(runtime: &R, command: &Command) -> Result<()> {
 }
 fn main() -> Result<()> {
     let cli = Cli::parse();
+    if matches!(
+        cli.command,
+        Command::MetalVerify { .. } | Command::MetalGemm { .. } | Command::MetalAttention { .. }
+    ) {
+        ensure!(
+            cli.backend == Backend::Metal,
+            "metal-* experiments require --backend metal; no CoreX fallback"
+        );
+    }
+    if matches!(
+        &cli.command,
+        Command::Mlp {
+            simd_gemm: true,
+            ..
+        } | Command::Mlp { mps_gemm: true, .. }
+    ) {
+        ensure!(
+            cli.backend == Backend::Metal,
+            "--simd-gemm and --mps-gemm require Metal"
+        );
+    }
     match &cli.command {
         Command::Emit {
             spec,
@@ -173,7 +253,38 @@ fn main() -> Result<()> {
             #[cfg(target_os = "macos")]
             {
                 let runtime = jade_compute::runtime::metal::MetalRuntime::new()?;
-                run(&runtime, &cli.command)
+                use jade_compute::runtime::metal_lab;
+                match &cli.command {
+                    Command::MetalVerify { report } => {
+                        emit_report(metal_lab::verify(&runtime)?, report.as_ref())
+                    }
+                    Command::MetalGemm {
+                        m,
+                        n,
+                        k,
+                        repeats,
+                        samples,
+                        report,
+                    } => emit_report(
+                        metal_lab::gemm(&runtime, *m, *n, *k, *repeats, *samples)?,
+                        report.as_ref(),
+                    ),
+                    Command::MetalAttention {
+                        heads,
+                        sequence,
+                        head_dim,
+                        causal,
+                        repeats,
+                        samples,
+                        report,
+                    } => emit_report(
+                        metal_lab::attention(
+                            &runtime, *heads, *sequence, *head_dim, *causal, *repeats, *samples,
+                        )?,
+                        report.as_ref(),
+                    ),
+                    _ => run(&runtime, &cli.command),
+                }
             }
             #[cfg(not(target_os = "macos"))]
             {

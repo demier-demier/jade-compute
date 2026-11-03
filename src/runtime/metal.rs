@@ -12,7 +12,7 @@ use metal::{
 use objc::{
     msg_send,
     rc::{autoreleasepool, StrongPtr},
-    runtime::{Class, Object, BOOL, YES},
+    runtime::{Class, Object, BOOL, NO, YES},
     sel, sel_impl,
 };
 use std::{
@@ -27,6 +27,18 @@ use std::{
 };
 
 static NEXT_ID: AtomicU64 = AtomicU64::new(1);
+
+// Public Apple API, declared in MetalPerformanceShaders.h. Linking the umbrella
+// framework also registers the MPSMatrix Objective-C classes used below.
+#[link(name = "MetalPerformanceShaders", kind = "framework")]
+extern "C" {
+    #[link_name = "MPSSupportsMTLDevice"]
+    fn mps_supports_device(device: *mut metal::MTLDevice) -> BOOL;
+}
+
+// MPSCoreTypes.h declares MPSDataType as NS_ENUM(uint32_t, ...).
+// MPSDataTypeFloat32 = MPSDataTypeFloatBit | 32; not an NSUInteger enum.
+const MPS_DATA_TYPE_FLOAT32: u32 = 0x1000_0000 | 32;
 
 fn fresh_id() -> Result<u64> {
     NEXT_ID
@@ -86,6 +98,92 @@ fn native_string(value: &str) -> Result<StrongPtr> {
     }
 }
 
+fn mps_descriptor(rows: u32, columns: u32) -> Result<StrongPtr> {
+    ensure!(rows > 0, "MPS matrix rows must be positive");
+    let row_bytes = allocation_bytes(columns as usize)?;
+    let class = Class::get("MPSMatrixDescriptor").context("MPSMatrixDescriptor is unavailable")?;
+    // SAFETY: rowBytes is a whole packed FP32 row. Apple's documented recommended
+    // alignment is optional: the required stride is a multiple of element size
+    // and at least columns*sizeof(element). Retain the autoreleased descriptor.
+    unsafe {
+        let descriptor: *mut Object = msg_send![class,
+            matrixDescriptorWithRows: rows as usize
+            columns: columns as usize
+            rowBytes: row_bytes
+            dataType: MPS_DATA_TYPE_FLOAT32
+        ];
+        ensure!(
+            !descriptor.is_null(),
+            "MPS matrix descriptor creation failed"
+        );
+        Ok(StrongPtr::retain(descriptor))
+    }
+}
+
+fn mps_matrix(buffer: &MetalBuffer, descriptor: &StrongPtr) -> Result<StrongPtr> {
+    let class = Class::get("MPSMatrix").context("MPSMatrix is unavailable")?;
+    // SAFETY: called only after descriptor dimensions and buffer origin/length
+    // were checked together. initWithBuffer:descriptor: uses the existing buffer
+    // at offset zero. The returned +1 reference is balanced by StrongPtr.
+    unsafe {
+        let allocated: *mut Object = msg_send![class, alloc];
+        ensure!(!allocated.is_null(), "MPS matrix allocation failed");
+        let initialized: *mut Object = msg_send![allocated,
+            initWithBuffer: &*buffer.native
+            descriptor: **descriptor
+        ];
+        ensure!(!initialized.is_null(), "MPS matrix initialization failed");
+        Ok(StrongPtr::new(initialized))
+    }
+}
+
+// Both custom kernels and MPS use this identical submit/wait/timestamp boundary.
+fn finish_command(
+    command: &metal::CommandBufferRef,
+    started: Instant,
+    dispatches: u64,
+    repeats: u32,
+) -> Result<Execution> {
+    command.commit();
+    command.wait_until_completed();
+    let host_ms = started.elapsed().as_secs_f64() * 1000.0;
+    if command.status() != MTLCommandBufferStatus::Completed {
+        let description = unsafe {
+            let error: *mut Object = msg_send![command, error];
+            error_description(error)
+        };
+        bail!(
+            "Metal command buffer failed ({:?}): {description}",
+            command.status()
+        );
+    }
+    // Native command-buffer timestamps are seconds, valid after completion.
+    // Missing/zero timestamps remain None, never infinite reported throughput.
+    let gpu_ms = unsafe {
+        let has_start: BOOL = msg_send![command, respondsToSelector: sel!(GPUStartTime)];
+        let has_end: BOOL = msg_send![command, respondsToSelector: sel!(GPUEndTime)];
+        if has_start == YES && has_end == YES {
+            let start: f64 = msg_send![command, GPUStartTime];
+            let end: f64 = msg_send![command, GPUEndTime];
+            let elapsed = (end - start) * 1000.0;
+            (start.is_finite()
+                && start > 0.0
+                && end.is_finite()
+                && elapsed.is_finite()
+                && elapsed > 0.0)
+                .then_some(elapsed)
+        } else {
+            None
+        }
+    };
+    Ok(Execution {
+        host_ms,
+        gpu_ms,
+        dispatches,
+        repeats,
+    })
+}
+
 pub struct MetalBuffer {
     native: metal::Buffer,
     elements: usize,
@@ -105,11 +203,83 @@ impl Buffer for MetalBuffer {
 
 pub struct MetalKernel {
     spec: KernelSpec,
-    pipeline: metal::ComputePipelineState,
-    grid: MTLSize,
-    block: MTLSize,
+    kind: MetalKernelKind,
     owner: u64,
     _thread_confined: PhantomData<Rc<()>>,
+}
+
+enum MetalKernelKind {
+    Shader {
+        pipeline: metal::ComputePipelineState,
+        grid: MTLSize,
+        block: MTLSize,
+    },
+    MpsGemm(MetalMpsGemm),
+}
+
+/// Apple's native FP32 matrix-multiplication baseline. Descriptors describe the
+/// same packed row-major buffers as Jade GEMM; no transpose, repacking or dtype
+/// conversion is inserted. Native objects stay private and thread-confined.
+pub struct MetalMpsGemm {
+    native: StrongPtr,
+    left_descriptor: StrongPtr,
+    right_descriptor: StrongPtr,
+    output_descriptor: StrongPtr,
+    spec: KernelSpec,
+    owner: u64,
+    _thread_confined: PhantomData<Rc<()>>,
+}
+
+struct MpsMatrices {
+    left: StrongPtr,
+    right: StrongPtr,
+    result: StrongPtr,
+}
+
+impl MpsMatrices {
+    // The calling execution path checks all buffer owners, dimensions and aliases
+    // before constructing wrappers. No GPU work or storage allocation occurs.
+    fn new(
+        kernel: &MetalMpsGemm,
+        a: &MetalBuffer,
+        b: &MetalBuffer,
+        out: &MetalBuffer,
+    ) -> Result<Self> {
+        Ok(Self {
+            left: mps_matrix(a, &kernel.left_descriptor)?,
+            right: mps_matrix(b, &kernel.right_descriptor)?,
+            result: mps_matrix(out, &kernel.output_descriptor)?,
+        })
+    }
+}
+
+fn encode_mps(command: &metal::CommandBufferRef, kernel: &MetalMpsGemm, matrices: &MpsMatrices) {
+    // SAFETY: private callers retain the checked kernel, matrix wrappers and
+    // buffers until command completion. They all belong to the same device.
+    // MPS encodes its own operations into the same tracked command buffer.
+    unsafe {
+        let _: () = msg_send![*kernel.native,
+            encodeToCommandBuffer: command
+            leftMatrix: *matrices.left
+            rightMatrix: *matrices.right
+            resultMatrix: *matrices.result
+        ];
+    }
+}
+
+// Preparing a typed sequence avoids a parallel optional-wrapper array. Every
+// MPS job owns its wrappers before timing starts and through completion.
+enum PreparedMetalJob<'a> {
+    Shader {
+        pipeline: &'a metal::ComputePipelineState,
+        grid: MTLSize,
+        block: MTLSize,
+        buffers: &'a [&'a MetalBuffer],
+    },
+    MpsGemm {
+        kernel: &'a MetalMpsGemm,
+        matrices: MpsMatrices,
+    },
 }
 
 pub struct MetalRuntime {
@@ -155,6 +325,119 @@ impl MetalRuntime {
             "buffer belongs to a different Metal runtime"
         );
         Ok(())
+    }
+
+    /// Conservative capability gate for the explicit SIMD-group variants.
+    pub fn supports_apple7(&self) -> bool {
+        // SAFETY: the selector query is valid on every NSObject-backed device;
+        // call supportsFamily only when the OS implements it.
+        unsafe {
+            let available: BOOL =
+                msg_send![&*self.device, respondsToSelector: sel!(supportsFamily:)];
+            available == YES && self.device.supports_family(metal::MTLGPUFamily::Apple7)
+        }
+    }
+
+    /// Prepare Apple's MPSMatrixMultiplication with alpha=1, beta=0 and FP32
+    /// packed descriptors. Object creation is outside execute_mps_gemm timing.
+    /// Public API references: MPSMatrixMultiplication.h and MPSCore/MPSMatrix.h
+    /// in the Apple SDK; no private framework interfaces are used.
+    pub fn compile_mps_gemm(&self, m: u32, n: u32, k: u32) -> Result<MetalMpsGemm> {
+        let spec = KernelSpec::Gemm {
+            m,
+            n,
+            k,
+            tiled: false,
+        };
+        spec.validate()?;
+        // SAFETY: the device is a live owned MTLDevice and the public support
+        // function does not take ownership or submit any GPU work.
+        ensure!(
+            unsafe { mps_supports_device(self.device.as_ptr()) } == YES,
+            "Metal Performance Shaders does not support this device"
+        );
+        autoreleasepool(|| {
+            let left_descriptor = mps_descriptor(m, k)?;
+            let right_descriptor = mps_descriptor(k, n)?;
+            let output_descriptor = mps_descriptor(m, n)?;
+            let class = Class::get("MPSMatrixMultiplication")
+                .context("MPSMatrixMultiplication class is unavailable")?;
+            // SAFETY: alloc/init returns +1 ownership, checked for nil before
+            // wrapping. Selector argument widths follow the public SDK header:
+            // BOOL flags, NSUInteger dimensions, double alpha/beta.
+            let native = unsafe {
+                let allocated: *mut Object = msg_send![class, alloc];
+                ensure!(!allocated.is_null(), "MPS GEMM allocation failed");
+                let initialized: *mut Object = msg_send![allocated,
+                    initWithDevice: &*self.device
+                    transposeLeft: NO
+                    transposeRight: NO
+                    resultRows: m as usize
+                    resultColumns: n as usize
+                    interiorColumns: k as usize
+                    alpha: 1.0_f64
+                    beta: 0.0_f64
+                ];
+                ensure!(!initialized.is_null(), "MPS GEMM initialization failed");
+                // MPSKernelOptionsNone. Do not opt into the public
+                // MPSKernelOptionsAllowReducedPrecision performance tradeoff.
+                let _: () = msg_send![initialized, setOptions: 0_usize];
+                StrongPtr::new(initialized)
+            };
+            Ok(MetalMpsGemm {
+                native,
+                left_descriptor,
+                right_descriptor,
+                output_descriptor,
+                spec,
+                owner: self.owner,
+                _thread_confined: PhantomData,
+            })
+        })
+    }
+
+    /// Run repeated C=A*B with Apple's native FP32 GEMM. Matrix wrapper creation
+    /// and argument validation occur before the timer. Host time includes command
+    /// buffer creation, every MPS encode, submission and completion wait. MPS may
+    /// perform internal lazy setup on its first encode; benchmarks must warm up.
+    /// Execution.dispatches counts logical MPS GEMM encodes; the framework's
+    /// internal number of GPU dispatches is opaque.
+    pub fn execute_mps_gemm(
+        &self,
+        kernel: &MetalMpsGemm,
+        a: &MetalBuffer,
+        b: &MetalBuffer,
+        out: &MetalBuffer,
+        repeats: u32,
+    ) -> Result<Execution> {
+        ensure!(
+            kernel.owner == self.owner,
+            "MPS kernel belongs to a different Metal runtime"
+        );
+        ensure!(repeats > 0, "MPS GEMM repeats must be positive");
+        for buffer in [a, b, out] {
+            self.check_buffer(buffer)?;
+        }
+        kernel
+            .spec
+            .validate_bindings(&[a.len(), b.len(), out.len()], &[a.id(), b.id(), out.id()])?;
+        autoreleasepool(|| {
+            // Wrappers retain existing buffers; they do not allocate matrix
+            // storage or copy/repack the data. Their setup is not timed.
+            let matrices = MpsMatrices::new(kernel, a, b, out)?;
+            let started = Instant::now();
+            let command = unsafe {
+                // SAFETY: checked autoreleased command buffer lives through
+                // completion inside this pool, as in the regular execute path.
+                let raw: *mut metal::MTLCommandBuffer = msg_send![&*self.queue, commandBuffer];
+                ensure!(!raw.is_null(), "Metal command buffer allocation failed");
+                metal::CommandBufferRef::from_ptr(raw)
+            };
+            for _ in 0..repeats {
+                encode_mps(command, kernel, &matrices);
+            }
+            finish_command(command, started, u64::from(repeats), repeats)
+        })
     }
 
     fn build_pipeline(&self, spec: &KernelSpec) -> Result<metal::ComputePipelineState> {
@@ -215,11 +498,13 @@ impl Runtime for MetalRuntime {
         RuntimeInfo {
             backend: "native-metal".into(),
             device: self.name.clone(),
-            execution: "direct MTLBuffer/MTLComputePipelineState; ordered synchronous command buffers".into(),
+            execution: "direct MTLBuffer/MTLComputePipelineState and explicit MPS GEMM; ordered synchronous command buffers".into(),
             limitations: vec![
-                "FP32 kernels generated from Jade IR; no tensor-core instructions".into(),
+                "FP32 Jade IR; explicit SIMD-group matrix operations where selected; no NVIDIA Tensor Core/WMMA ABI".into(),
+                format!("Apple7+ SIMD-group capability gate: {}", self.supports_apple7()),
                 "Shared storage and thread-confined synchronous API; no asynchronous stream interface".into(),
                 "GPU timings cover the full command buffer, including dependencies between jobs".into(),
+                "Dispatch counts are logical operations; MPS internal GPU kernel counts are opaque".into(),
                 "Metal validation does not establish Chinese-GPU support or performance".into(),
             ],
         }
@@ -302,6 +587,21 @@ impl Runtime for MetalRuntime {
 
     fn compile(&self, spec: &KernelSpec) -> Result<MetalKernel> {
         spec.validate()?;
+        // MPS is an explicit IR operation, never a silent substitution for a
+        // shader variant. It has no generated source or caller-specified grid.
+        if let KernelSpec::GemmMps { m, n, k } = spec {
+            return Ok(MetalKernel {
+                spec: spec.clone(),
+                kind: MetalKernelKind::MpsGemm(self.compile_mps_gemm(*m, *n, *k)?),
+                owner: self.owner,
+                _thread_confined: PhantomData,
+            });
+        }
+        let requires_simdgroup = spec.requires_simdgroup_matrix() || spec.requires_simdgroup_ops();
+        ensure!(
+            !requires_simdgroup || self.supports_apple7(),
+            "selected SIMD-group operation requires Apple7 or newer Metal GPU support"
+        );
         let launch = spec.launch()?;
         ensure!(
             launch.grid.iter().chain(&launch.block).all(|&n| n > 0),
@@ -341,6 +641,10 @@ impl Runtime for MetalRuntime {
             "kernel exceeds pipeline threadgroup limit"
         );
         ensure!(
+            !requires_simdgroup || pipeline.thread_execution_width() == 32,
+            "selected SIMD-group operation requires a 32-thread execution width"
+        );
+        ensure!(
             pipeline.static_threadgroup_memory_length()
                 <= self.device.max_threadgroup_memory_length(),
             "kernel exceeds Metal shared-memory limit"
@@ -348,9 +652,11 @@ impl Runtime for MetalRuntime {
         let size = |v: [u32; 3]| MTLSize::new(v[0] as u64, v[1] as u64, v[2] as u64);
         Ok(MetalKernel {
             spec: spec.clone(),
-            pipeline,
-            grid: size(launch.grid),
-            block: size(launch.block),
+            kind: MetalKernelKind::Shader {
+                pipeline,
+                grid: size(launch.grid),
+                block: size(launch.block),
+            },
             owner: self.owner,
             _thread_confined: PhantomData,
         })
@@ -382,6 +688,34 @@ impl Runtime for MetalRuntime {
             job.kernel.spec.validate_bindings(&lengths, &ids)?;
         }
         autoreleasepool(|| {
+            let prepared = jobs
+                .iter()
+                .map(|job| -> Result<PreparedMetalJob<'_>> {
+                    Ok(match &job.kernel.kind {
+                        MetalKernelKind::Shader {
+                            pipeline,
+                            grid,
+                            block,
+                        } => PreparedMetalJob::Shader {
+                            pipeline,
+                            grid: *grid,
+                            block: *block,
+                            buffers: &job.buffers,
+                        },
+                        MetalKernelKind::MpsGemm(kernel) => PreparedMetalJob::MpsGemm {
+                            kernel,
+                            // Full-batch binding validation above established exactly
+                            // three shape-matched buffers for this MPS operation.
+                            matrices: MpsMatrices::new(
+                                kernel,
+                                job.buffers[0],
+                                job.buffers[1],
+                                job.buffers[2],
+                            )?,
+                        },
+                    })
+                })
+                .collect::<Result<Vec<_>>>()?;
             let started = Instant::now();
             // SAFETY: commandBuffer and computeCommandEncoder are autoreleased
             // objects used only within this pool. Standard command buffers
@@ -392,61 +726,36 @@ impl Runtime for MetalRuntime {
                 metal::CommandBufferRef::from_ptr(raw)
             };
             for _ in 0..repeats {
-                for job in jobs {
-                    let encoder = unsafe {
-                        let raw: *mut metal::MTLComputeCommandEncoder =
-                            msg_send![command, computeCommandEncoder];
-                        ensure!(!raw.is_null(), "Metal compute encoder allocation failed");
-                        metal::ComputeCommandEncoderRef::from_ptr(raw)
-                    };
-                    encoder.set_compute_pipeline_state(&job.kernel.pipeline);
-                    for (index, buffer) in job.buffers.iter().enumerate() {
-                        encoder.set_buffer(index as u64, Some(&buffer.native), 0);
+                for job in &prepared {
+                    match job {
+                        PreparedMetalJob::Shader {
+                            pipeline,
+                            grid,
+                            block,
+                            buffers,
+                        } => {
+                            let encoder = unsafe {
+                                let raw: *mut metal::MTLComputeCommandEncoder =
+                                    msg_send![command, computeCommandEncoder];
+                                ensure!(!raw.is_null(), "Metal compute encoder allocation failed");
+                                metal::ComputeCommandEncoderRef::from_ptr(raw)
+                            };
+                            encoder.set_compute_pipeline_state(pipeline);
+                            for (index, buffer) in buffers.iter().enumerate() {
+                                encoder.set_buffer(index as u64, Some(&buffer.native), 0);
+                            }
+                            encoder.dispatch_thread_groups(*grid, *block);
+                            encoder.end_encoding();
+                        }
+                        PreparedMetalJob::MpsGemm { kernel, matrices } => {
+                            encode_mps(command, kernel, matrices);
+                        }
                     }
-                    encoder.dispatch_thread_groups(job.kernel.grid, job.kernel.block);
-                    encoder.end_encoding();
                     // Separate serial encoders plus tracked resources establish
-                    // write-to-read dependencies between jobs and repetitions.
+                    // write/read ordering across custom and MPS jobs/repetitions.
                 }
             }
-            command.commit();
-            command.wait_until_completed();
-            let host_ms = started.elapsed().as_secs_f64() * 1000.0;
-            if command.status() != MTLCommandBufferStatus::Completed {
-                let description = unsafe {
-                    let error: *mut Object = msg_send![command, error];
-                    error_description(error)
-                };
-                bail!(
-                    "Metal command buffer failed ({:?}): {description}",
-                    command.status()
-                );
-            }
-            // Native command-buffer timestamps are in seconds and are valid
-            // only after completion. Missing/zero timestamps remain None.
-            let gpu_ms = unsafe {
-                let has_start: BOOL = msg_send![command, respondsToSelector: sel!(GPUStartTime)];
-                let has_end: BOOL = msg_send![command, respondsToSelector: sel!(GPUEndTime)];
-                if has_start == YES && has_end == YES {
-                    let start: f64 = msg_send![command, GPUStartTime];
-                    let end: f64 = msg_send![command, GPUEndTime];
-                    let elapsed = (end - start) * 1000.0;
-                    (start.is_finite()
-                        && start > 0.0
-                        && end.is_finite()
-                        && elapsed.is_finite()
-                        && elapsed > 0.0)
-                        .then_some(elapsed)
-                } else {
-                    None
-                }
-            };
-            Ok(Execution {
-                host_ms,
-                gpu_ms,
-                dispatches,
-                repeats,
-            })
+            finish_command(command, started, dispatches, repeats)
         })
     }
 }
@@ -461,6 +770,149 @@ mod tests {
         assert!(allocation_bytes(usize::MAX).is_err());
         assert!(allocation_bytes(isize::MAX as usize / 4 + 1).is_err());
         assert_eq!(allocation_bytes(7).unwrap(), 28);
+    }
+
+    #[test]
+    #[ignore = "requires a working native Metal GPU and Metal Performance Shaders"]
+    fn native_mps_gemm_packed_fp32_and_ownership_checks() -> Result<()> {
+        let runtime = MetalRuntime::new()?;
+        let other = MetalRuntime::new()?;
+        assert!(runtime.compile_mps_gemm(0, 2, 3).is_err());
+        for (m, n, k) in [(1, 1, 1), (2, 3, 2), (17, 31, 19), (64, 64, 64)] {
+            let shape = crate::Shape::new(m, n, k)?;
+            let (av, bv) = crate::validation::inputs(shape);
+            let a = runtime.alloc(av.len())?;
+            let b = runtime.alloc(bv.len())?;
+            let out = runtime.alloc(shape.c_len())?;
+            let kernel = runtime.compile_mps_gemm(m, n, k)?;
+            runtime.upload(&a, &av)?;
+            runtime.upload(&b, &bv)?;
+            let timing = runtime.execute_mps_gemm(&kernel, &a, &b, &out, 3)?;
+            assert_eq!(timing.dispatches, 3);
+            assert_eq!(timing.repeats, 3);
+            assert!(timing.host_ms.is_finite() && timing.host_ms > 0.0);
+            if let Some(ms) = timing.gpu_ms {
+                assert!(ms.is_finite() && ms > 0.0);
+            }
+            crate::validation::check(shape, &av, &bv, &runtime.download(&out)?, usize::MAX, false)?;
+        }
+        let a = runtime.alloc(4)?;
+        let b = runtime.alloc(4)?;
+        let out = runtime.alloc(4)?;
+        let short = runtime.alloc(3)?;
+        let foreign = other.alloc(4)?;
+        let kernel = runtime.compile_mps_gemm(2, 2, 2)?;
+        let foreign_kernel = other.compile_mps_gemm(2, 2, 2)?;
+        assert!(runtime.execute_mps_gemm(&kernel, &a, &b, &a, 1).is_err());
+        assert!(runtime.execute_mps_gemm(&kernel, &a, &b, &b, 1).is_err());
+        assert!(runtime
+            .execute_mps_gemm(&kernel, &short, &b, &out, 1)
+            .is_err());
+        assert!(runtime
+            .execute_mps_gemm(&kernel, &foreign, &b, &out, 1)
+            .is_err());
+        assert!(runtime
+            .execute_mps_gemm(&foreign_kernel, &a, &b, &out, 1)
+            .is_err());
+        assert!(runtime.execute_mps_gemm(&kernel, &a, &b, &out, 0).is_err());
+        assert_eq!(runtime.download(&out)?, vec![0.0; 4]);
+        // Read/read aliasing is valid; only writes must not alias another binding.
+        runtime.upload(&a, &[1.0, 2.0, 3.0, 4.0])?;
+        runtime.execute_mps_gemm(&kernel, &a, &a, &out, 1)?;
+        assert_eq!(runtime.download(&out)?, vec![7.0, 10.0, 15.0, 22.0]);
+        Ok(())
+    }
+
+    #[test]
+    #[ignore = "requires a working native Metal GPU and Metal Performance Shaders"]
+    fn native_mixed_mps_shader_batch_ordering_and_rejection() -> Result<()> {
+        let runtime = MetalRuntime::new()?;
+        let other = MetalRuntime::new()?;
+        let a = runtime.alloc(4)?;
+        let b = runtime.alloc(4)?;
+        let bias = runtime.alloc(4)?;
+        let ab = runtime.alloc(4)?;
+        let shifted = runtime.alloc(4)?;
+        let out = runtime.alloc(4)?;
+        let foreign = other.alloc(4)?;
+        runtime.upload(&a, &[1.0, 2.0, 3.0, 4.0])?;
+        runtime.upload(&b, &[2.0, 0.0, 1.0, 2.0])?;
+        runtime.upload(&bias, &[1.0, -1.0, 2.0, -2.0])?;
+        runtime.upload(&ab, &[11.0, 12.0, 13.0, 14.0])?;
+        let spec = KernelSpec::GemmMps { m: 2, n: 2, k: 2 };
+        let gemm = runtime.compile(&spec)?;
+        let foreign_gemm = other.compile(&spec)?;
+        let add = runtime.compile(&KernelSpec::Add { len: 4 })?;
+
+        // A later invalid shader job must reject before the first MPS operation
+        // is encoded/submitted, preserving preexisting output bytes.
+        assert!(runtime
+            .execute(
+                &[
+                    Dispatch {
+                        kernel: &gemm,
+                        buffers: vec![&a, &b, &ab]
+                    },
+                    Dispatch {
+                        kernel: &add,
+                        buffers: vec![&ab, &foreign, &shifted]
+                    },
+                ],
+                1
+            )
+            .is_err());
+        assert_eq!(runtime.download(&ab)?, vec![11.0, 12.0, 13.0, 14.0]);
+        assert!(runtime
+            .execute(
+                &[
+                    Dispatch {
+                        kernel: &gemm,
+                        buffers: vec![&a, &b, &ab]
+                    },
+                    Dispatch {
+                        kernel: &foreign_gemm,
+                        buffers: vec![&ab, &b, &out]
+                    },
+                ],
+                1
+            )
+            .is_err());
+        assert_eq!(runtime.download(&ab)?, vec![11.0, 12.0, 13.0, 14.0]);
+        assert!(runtime
+            .execute(
+                &[Dispatch {
+                    kernel: &gemm,
+                    buffers: vec![&a, &b, &a]
+                },],
+                1
+            )
+            .is_err());
+
+        // Both MPS->shader and shader->MPS dependencies occur in one command
+        // buffer. Replay must preserve their order across all repetitions.
+        let jobs = [
+            Dispatch {
+                kernel: &gemm,
+                buffers: vec![&a, &b, &ab],
+            },
+            Dispatch {
+                kernel: &add,
+                buffers: vec![&ab, &bias, &shifted],
+            },
+            Dispatch {
+                kernel: &gemm,
+                buffers: vec![&shifted, &b, &out],
+            },
+        ];
+        let timing = runtime.execute(&jobs, 3)?;
+        assert_eq!(timing.dispatches, 9); // logical operations, not MPS internals
+        assert_eq!(timing.repeats, 3);
+        assert_eq!(runtime.download(&ab)?, vec![4.0, 4.0, 10.0, 8.0]);
+        assert_eq!(runtime.download(&shifted)?, vec![5.0, 3.0, 12.0, 6.0]);
+        assert_eq!(runtime.download(&out)?, vec![13.0, 6.0, 30.0, 12.0]);
+        assert_eq!(runtime.download(&a)?, vec![1.0, 2.0, 3.0, 4.0]);
+        assert_eq!(runtime.download(&b)?, vec![2.0, 0.0, 1.0, 2.0]);
+        Ok(())
     }
 
     #[test]
